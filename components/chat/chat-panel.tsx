@@ -104,9 +104,9 @@ export function ChatPanel() {
   }
 
   return (
-    <div className="fixed bottom-20 lg:bottom-6 right-4 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-[5.5rem] lg:bottom-6 right-4 z-50 flex flex-col items-end gap-3">
       {isOpen && (
-        <div className="w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100dvh-10rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed lg:relative inset-x-2 bottom-[5.5rem] lg:inset-auto lg:bottom-auto lg:right-auto w-auto lg:w-[360px] h-[calc(100dvh-9rem)] lg:h-[520px] max-h-[calc(100dvh-9rem)] lg:max-h-[calc(100dvh-10rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
             <div className="flex items-center gap-2.5">
