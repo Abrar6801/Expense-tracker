@@ -27,13 +27,13 @@ export function StatsCard({
 }: StatsCardProps) {
   if (isLoading) {
     return (
-      <div className="glass-card rounded-2xl p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-2 flex-1">
-            <Skeleton className="h-3 w-20 bg-white/5" />
-            <Skeleton className="h-8 w-28 bg-white/5" />
+      <div className="glass-card rounded-2xl p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-2 flex-1 min-w-0">
+            <Skeleton className="h-3 w-16 sm:w-20 bg-white/5" />
+            <Skeleton className="h-7 sm:h-8 w-20 sm:w-28 bg-white/5" />
           </div>
-          <Skeleton className="h-10 w-10 rounded-xl bg-white/5" />
+          <Skeleton className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-xl bg-white/5" />
         </div>
       </div>
     )
@@ -44,7 +44,7 @@ export function StatsCard({
 
   return (
     <div className={cn(
-      'relative rounded-2xl p-5 overflow-hidden hover-lift cursor-default',
+      'relative rounded-2xl p-4 sm:p-5 overflow-hidden hover-lift cursor-default',
       'glass-card group transition-all duration-300 hover:border-white/[0.12]'
     )}>
       {/* Subtle gradient accent */}
@@ -59,7 +59,7 @@ export function StatsCard({
             {title}
           </p>
           <p className={cn(
-            'mt-2 text-2xl sm:text-3xl font-bold tracking-tight font-mono',
+            'mt-1.5 text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight font-mono',
             isPositive && 'gradient-text-green',
             showSign && isNegative && 'gradient-text-red',
             !showSign && 'text-white'
@@ -70,7 +70,7 @@ export function StatsCard({
         </div>
 
         <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+          className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl"
           style={{ background: iconBg }}
         >
           <Icon className="h-5 w-5" style={{ color: iconColor }} />

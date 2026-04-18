@@ -102,7 +102,7 @@ export function AccountCard({ account }: AccountCardProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/30 hover:text-white/70 hover:bg-white/5"
+                  className="h-10 w-10 sm:h-8 sm:w-8 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/30 hover:text-white/70 hover:bg-white/5"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
@@ -138,7 +138,7 @@ export function AccountCard({ account }: AccountCardProps) {
           {isCreditCard && (
             <Button
               size="sm"
-              className="mt-4 w-full h-8 text-xs border-0 font-semibold"
+              className="mt-4 w-full h-10 text-sm border-0 font-semibold"
               style={{ background: `${color}25`, color }}
               onClick={() => { setPayAmount(''); setPayFromId(''); setPayFull(true); setShowPayDialog(true) }}
             >

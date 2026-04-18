@@ -93,21 +93,21 @@ export function PlannerClient({ email }: PlannerClientProps) {
         </div>
 
         {/* Stats — same style as dashboard */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
           {stats.map(({ label, value, prefix, icon: Icon, color, bg }) => (
-            <div key={label} className="glass-card rounded-2xl p-5 hover-lift cursor-default">
-              <div className="flex items-start justify-between gap-3">
+            <div key={label} className="glass-card rounded-2xl p-4 sm:p-5 hover-lift cursor-default">
+              <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-white/30">{label}</p>
                   {isLoading
-                    ? <Skeleton className="h-8 w-28 mt-2 bg-white/5" />
-                    : <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight font-mono" style={{ color }}>
+                    ? <Skeleton className="h-7 sm:h-8 w-20 sm:w-28 mt-1.5 bg-white/5" />
+                    : <p className="mt-1.5 text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight font-mono" style={{ color }}>
                         {prefix}{formatCurrency(Math.abs(value))}
                       </p>
                   }
                 </div>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: bg }}>
-                  <Icon className="h-5 w-5" style={{ color }} />
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: bg }}>
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color }} />
                 </div>
               </div>
             </div>
@@ -115,7 +115,7 @@ export function PlannerClient({ email }: PlannerClientProps) {
         </div>
 
         {/* Main content */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Left: tabbed form */}
           <div className="glass-card rounded-2xl overflow-hidden">
@@ -323,7 +323,7 @@ export function PlannerClient({ email }: PlannerClientProps) {
                               −{formatCurrency(parseFloat(item.amount), item.account.currency)}
                             </span>
                             <Button variant="ghost" size="icon"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-white/20 hover:text-rose-400 hover:bg-rose-500/10"
+                              className="h-9 w-9 sm:h-7 sm:w-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/20 hover:text-rose-400 hover:bg-rose-500/10"
                               onClick={() => deleteItem.mutate(item.id)} disabled={deleteItem.isPending}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
@@ -351,7 +351,7 @@ export function PlannerClient({ email }: PlannerClientProps) {
                               +{formatCurrency(parseFloat(item.amount))}
                             </span>
                             <Button variant="ghost" size="icon"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-white/20 hover:text-rose-400 hover:bg-rose-500/10"
+                              className="h-9 w-9 sm:h-7 sm:w-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/20 hover:text-rose-400 hover:bg-rose-500/10"
                               onClick={() => deleteIncome.mutate(item.id)} disabled={deleteIncome.isPending}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>

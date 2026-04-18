@@ -76,7 +76,7 @@ export function TransactionItem({ transaction, showAccount = false }: Transactio
             {transaction.description && (
               <>
                 <span className="text-[10px] text-white/20">·</span>
-                <span className="text-[10px] text-white/30 truncate max-w-[100px]">
+                <span className="text-[10px] text-white/30 truncate max-w-[80px] sm:max-w-[160px]">
                   {transaction.description}
                 </span>
               </>
@@ -98,7 +98,7 @@ export function TransactionItem({ transaction, showAccount = false }: Transactio
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/30 hover:text-white/70 hover:bg-white/5"
+                className="h-9 w-9 sm:h-7 sm:w-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/30 hover:text-white/70 hover:bg-white/5"
               >
                 <MoreVertical className="h-3.5 w-3.5" />
               </Button>

@@ -97,7 +97,7 @@ export function TransactionList() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-9 w-9"
                     disabled={page <= 1}
                     onClick={() => setFilters((f) => ({ ...f, page: (f.page ?? 1) - 1 }))}
                   >
@@ -106,7 +106,7 @@ export function TransactionList() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-9 w-9"
                     disabled={page >= totalPages}
                     onClick={() => setFilters((f) => ({ ...f, page: (f.page ?? 1) + 1 }))}
                   >
