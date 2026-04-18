@@ -4,47 +4,45 @@
 
 @layer base {
   :root {
-    /* Force dark theme */
     color-scheme: dark;
 
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
+    --background: 240 20% 4%;
+    --foreground: 220 20% 96%;
 
-    --card: 240 8% 7%;
-    --card-foreground: 0 0% 98%;
+    --card: 240 15% 7%;
+    --card-foreground: 220 20% 96%;
 
-    --popover: 240 8% 9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 240 15% 8%;
+    --popover-foreground: 220 20% 96%;
 
-    --primary: 239 84% 67%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 258 90% 66%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 14%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 240 12% 12%;
+    --secondary-foreground: 220 20% 96%;
 
-    --muted: 240 5% 14%;
-    --muted-foreground: 240 5% 55%;
+    --muted: 240 12% 12%;
+    --muted-foreground: 240 8% 50%;
 
-    --accent: 240 5% 14%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 240 12% 14%;
+    --accent-foreground: 220 20% 96%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 5% 14%;
-    --input: 240 5% 14%;
-    --ring: 239 84% 67%;
+    --border: 240 10% 13%;
+    --input: 240 12% 11%;
+    --ring: 258 90% 66%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    /* Custom semantic colors */
-    --income: 142 71% 45%;
-    --income-foreground: 0 0% 98%;
-    --income-muted: 142 71% 45% / 0.15;
+    --income: 158 64% 52%;
+    --income-foreground: 0 0% 100%;
+    --income-muted: 158 64% 52% / 0.15;
 
-    --expense: 0 72% 51%;
-    --expense-foreground: 0 0% 98%;
-    --expense-muted: 0 72% 51% / 0.15;
+    --expense: 350 89% 60%;
+    --expense-foreground: 0 0% 100%;
+    --expense-muted: 350 89% 60% / 0.15;
   }
 }
 
@@ -58,47 +56,104 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+    background-attachment: fixed;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/30;
-  }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-white/10 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-white/20; }
 }
 
 @layer utilities {
-  .income-text {
-    @apply text-green-400;
-  }
-  .expense-text {
-    @apply text-red-400;
-  }
-  .income-badge {
-    @apply bg-green-500/15 text-green-400 border-green-500/20;
-  }
-  .expense-badge {
-    @apply bg-red-500/15 text-red-400 border-red-500/20;
+  /* Glass effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  /* Shimmer loading animation */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #a78bfa 0%, #818cf8 50%, #67e8f9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-green {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-red {
+    background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow effects */
+  .glow-violet {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), 0 0 40px rgba(139, 92, 246, 0.05);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  }
+
+  .glow-red {
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.15);
+  }
+
+  /* Gradient borders via pseudo-element */
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.1), rgba(103, 232, 249, 0.1));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Income/expense text */
+  .income-text { @apply text-emerald-400; }
+  .expense-text { @apply text-rose-400; }
+  .income-badge { @apply bg-emerald-500/10 text-emerald-400 border-emerald-500/20; }
+  .expense-badge { @apply bg-rose-500/10 text-rose-400 border-rose-500/20; }
+
+  /* Shimmer loading */
   .shimmer {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      hsl(var(--muted)) 50%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
     background-size: 200% 100%;
     animation: shimmer 2s linear infinite;
+  }
+
+  /* Hover lift */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
   }
 }

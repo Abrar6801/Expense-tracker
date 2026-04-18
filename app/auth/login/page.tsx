@@ -6,13 +6,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { Loader2, TrendingUp } from 'lucide-react'
+import { Loader2, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { loginSchema, type LoginInput } from '@/lib/validations'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 function GoogleIcon() {
   return (
@@ -38,138 +37,125 @@ function LoginForm() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
-        },
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}` },
       })
       if (error) toast.error(error.message)
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      toast.error('Something went wrong.')
       setIsGoogleLoading(false)
     }
   }
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginInput>({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
   })
 
   async function onSubmit(values: LoginInput) {
     setIsLoading(true)
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      })
-
-      if (error) {
-        toast.error(error.message)
-        return
-      }
-
+      const { error } = await supabase.auth.signInWithPassword({ email: values.email, password: values.password })
+      if (error) { toast.error(error.message); return }
       router.push(redirectTo)
       router.refresh()
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      toast.error('Something went wrong.')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-base">Welcome back</CardTitle>
-        <CardDescription>Enter your credentials to continue</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={signInWithGoogle}
-          disabled={isLoading || isGoogleLoading}
-        >
-          {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
-          Continue with Google
-        </Button>
+    <div className="glass-card rounded-2xl p-8 space-y-6">
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full border-white/10 bg-white/[0.03] hover:bg-white/[0.07] text-white/80 hover:text-white"
+        onClick={signInWithGoogle}
+        disabled={isLoading || isGoogleLoading}
+      >
+        {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+        Continue with Google
+      </Button>
 
-        <div className="my-4 relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs text-muted-foreground uppercase">
-            <span className="bg-card px-2">or</span>
-          </div>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-white/[0.06]" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="px-3 text-[10px] uppercase tracking-widest text-white/25 bg-transparent">or sign in with email</span>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-xs text-white/50 uppercase tracking-wider">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            disabled={isLoading || isGoogleLoading}
+            className="bg-white/[0.04] border-white/[0.08] focus:border-violet-500/50 focus:ring-violet-500/20 text-white placeholder:text-white/20 h-11"
+            {...register('email')}
+          />
+          {errors.email && <p className="text-xs text-rose-400">{errors.email.message}</p>}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              disabled={isLoading || isGoogleLoading}
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
-            )}
-          </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="password" className="text-xs text-white/50 uppercase tracking-wider">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            autoComplete="current-password"
+            disabled={isLoading || isGoogleLoading}
+            className="bg-white/[0.04] border-white/[0.08] focus:border-violet-500/50 focus:ring-violet-500/20 text-white placeholder:text-white/20 h-11"
+            {...register('password')}
+          />
+          {errors.password && <p className="text-xs text-rose-400">{errors.password.message}</p>}
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              disabled={isLoading || isGoogleLoading}
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="text-xs text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign in
-          </Button>
-        </form>
-
-      </CardContent>
-    </Card>
+        <Button
+          type="submit"
+          className="w-full h-11 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 border-0 font-semibold shadow-lg shadow-violet-500/20"
+          disabled={isLoading || isGoogleLoading}
+        >
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Sign in
+        </Button>
+      </form>
+    </div>
   )
 }
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-            <TrendingUp className="h-6 w-6 text-primary" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative orbs */}
+      <div className="absolute top-1/4 -left-32 h-64 w-64 rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 h-64 w-64 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-violet-900/5 blur-3xl pointer-events-none" />
+
+      <div className="relative w-full max-w-sm space-y-8">
+        {/* Brand */}
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-xl shadow-violet-500/30">
+            <Sparkles className="h-6 w-6 text-white" />
+            <div className="absolute inset-0 rounded-2xl bg-white/10" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Expense Tracker</h1>
-          <p className="text-sm text-muted-foreground">Sign in to your account</p>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Aurora Finance</h1>
+            <p className="text-sm text-white/35 mt-1">Your intelligent money companion</p>
+          </div>
         </div>
 
-        <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>
+        <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-white/[0.03]" />}>
           <LoginForm />
         </Suspense>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-white/30">
           Don&apos;t have an account?{' '}
-          <Link
-            href="/auth/register"
-            className="text-primary underline-offset-4 hover:underline"
-          >
+          <Link href="/auth/register" className="text-violet-400 hover:text-violet-300 transition-colors font-medium">
             Create one
           </Link>
         </p>

@@ -7,9 +7,7 @@ import { useUIStore } from '@/store/ui-store'
 import { useAccounts, useDeleteAccount } from '@/hooks/use-accounts'
 import { useCreateTransfer } from '@/hooks/use-transactions'
 import { formatCurrency } from '@/lib/utils'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -59,40 +57,41 @@ export function AccountCard({ account }: AccountCardProps) {
   const isCreditCard = account.type === AccountType.CREDIT_CARD
   const isCash = account.type === AccountType.CASH
 
+  const color = account.color ?? '#7c3aed'
+
   return (
     <>
-      <Card className="relative overflow-hidden transition-all hover:shadow-md hover:border-border/80 group">
-        {/* Color accent bar */}
-        <div
-          className="absolute top-0 left-0 right-0 h-0.5 opacity-60"
-          style={{ backgroundColor: account.color ?? '#6366f1' }}
-        />
+      <div className="relative overflow-hidden rounded-2xl hover-lift group cursor-default" style={{
+        background: `linear-gradient(135deg, ${color}22 0%, ${color}08 50%, rgba(255,255,255,0.02) 100%)`,
+        border: `1px solid ${color}25`,
+      }}>
+        {/* Decorative circles */}
+        <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full opacity-10" style={{ background: color }} />
+        <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full opacity-5" style={{ background: color }} />
 
-        <CardContent className="p-5">
+        <div className="relative p-5">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
               <div
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                style={{ backgroundColor: `${account.color ?? '#6366f1'}20` }}
+                style={{ background: `${color}20`, border: `1px solid ${color}30` }}
               >
                 {isCreditCard ? (
-                  <CreditCard className="h-5 w-5" style={{ color: account.color ?? '#6366f1' }} />
+                  <CreditCard className="h-5 w-5" style={{ color }} />
                 ) : isCash ? (
-                  <Banknote className="h-5 w-5" style={{ color: account.color ?? '#6366f1' }} />
+                  <Banknote className="h-5 w-5" style={{ color }} />
                 ) : (
-                  <Building2 className="h-5 w-5" style={{ color: account.color ?? '#6366f1' }} />
+                  <Building2 className="h-5 w-5" style={{ color }} />
                 )}
               </div>
               <div className="min-w-0">
-                <p className="font-medium text-sm truncate">{account.name}</p>
+                <p className="font-semibold text-sm text-white/90 truncate">{account.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <Badge variant="outline" className="text-xs py-0 px-1.5">
-                    {isCreditCard ? 'Credit Card' : isCash ? 'Cash' : 'Bank'}
-                  </Badge>
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md" style={{ background: `${color}20`, color }}>
+                    {isCreditCard ? 'Credit' : isCash ? 'Cash' : 'Bank'}
+                  </span>
                   {account.lastFour && (
-                    <span className="text-xs text-muted-foreground font-mono">
-                      ••{account.lastFour}
-                    </span>
+                    <span className="text-[10px] text-white/30 font-mono">••{account.lastFour}</span>
                   )}
                 </div>
               </div>
@@ -103,25 +102,24 @@ export function AccountCard({ account }: AccountCardProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                  className="h-8 w-8 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/30 hover:text-white/70 hover:bg-white/5"
                 >
                   <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Account options</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => openEditAccount(account)}>
+              <DropdownMenuContent align="end" className="glass border-white/[0.08]">
+                <DropdownMenuItem onClick={() => openEditAccount(account)} className="focus:bg-white/5">
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit account
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => openAddTransaction(account.id)}>
+                <DropdownMenuItem onClick={() => openAddTransaction(account.id)} className="focus:bg-white/5">
                   <Plus className="mr-2 h-4 w-4" />
                   Add transaction
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-white/[0.06]" />
                 <DropdownMenuItem
                   onClick={() => setShowDeleteDialog(true)}
-                  className="text-destructive focus:text-destructive"
+                  className="text-rose-400 focus:text-rose-400 focus:bg-rose-500/10"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete account
@@ -130,31 +128,25 @@ export function AccountCard({ account }: AccountCardProps) {
             </DropdownMenu>
           </div>
 
-          {/* Balance */}
-          <div className="mt-4">
-            <p className="text-xs text-muted-foreground mb-1">{isCreditCard ? 'Amount Owed' : 'Balance'}</p>
-            <p
-              className={`text-2xl font-bold font-mono tracking-tight ${
-                isNegative ? 'text-red-400' : 'text-foreground'
-              }`}
-            >
+          <div className="mt-5">
+            <p className="text-[10px] uppercase tracking-widest text-white/30 mb-1">{isCreditCard ? 'Amount Owed' : 'Balance'}</p>
+            <p className={`text-3xl font-bold font-mono tracking-tight ${isNegative ? 'text-rose-400' : 'text-white'}`}>
               {formatCurrency(Math.abs(balance), account.currency)}
             </p>
           </div>
 
-          {/* Credit card pay button */}
           {isCreditCard && (
             <Button
               size="sm"
-              variant="outline"
-              className="mt-3 w-full h-8 text-xs border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
+              className="mt-4 w-full h-8 text-xs border-0 font-semibold"
+              style={{ background: `${color}25`, color }}
               onClick={() => { setPayAmount(''); setPayFromId(''); setPayFull(true); setShowPayDialog(true) }}
             >
               Make a Payment
             </Button>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Credit card payment dialog */}
       <Dialog open={showPayDialog} onOpenChange={setShowPayDialog}>
