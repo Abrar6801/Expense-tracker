@@ -9,6 +9,11 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum ExpectedIncomeType {
+  INCOME_SOURCE
+  MONEY_OWED
+}
+
 enum AccountType {
   BANK
   CREDIT_CARD
@@ -71,6 +76,20 @@ model Transaction {
   @@index([accountId])
   @@index([userId, date])
   @@index([userId, category])
+}
+
+model ExpectedIncome {
+  id        String             @id @default(cuid())
+  userId    String
+  name      String
+  amount    Decimal            @db.Decimal(19, 4)
+  type      ExpectedIncomeType
+  from      String?
+  notes     String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId])
 }
 
 model UserPreferences {

@@ -1,7 +1,7 @@
-import type { Account, Transaction, UserPreferences, PlannedExpense, AccountType, TransactionType } from '@prisma/client'
+import type { Account, Transaction, UserPreferences, PlannedExpense, ExpectedIncome, AccountType, TransactionType, ExpectedIncomeType } from '@prisma/client'
 
 // ─── Re-exports from Prisma ───────────────────────────────────────────────────
-export type { AccountType, TransactionType }
+export type { AccountType, TransactionType, ExpectedIncomeType }
 
 // ─── Serialized types (Decimal → string, Date → string for JSON) ──────────────
 
@@ -50,6 +50,21 @@ export type SerializedPlannedExpense = Omit<PlannedExpense, 'amount' | 'createdA
 export function serializePlannedExpense(
   item: PlannedExpense & { account: Pick<Account, 'id' | 'name' | 'color' | 'currency'> }
 ): SerializedPlannedExpense {
+  return {
+    ...item,
+    amount: item.amount.toString(),
+    createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
+  }
+}
+
+export type SerializedExpectedIncome = Omit<ExpectedIncome, 'amount' | 'createdAt' | 'updatedAt'> & {
+  amount: string
+  createdAt: string
+  updatedAt: string
+}
+
+export function serializeExpectedIncome(item: ExpectedIncome): SerializedExpectedIncome {
   return {
     ...item,
     amount: item.amount.toString(),
