@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { prisma } from '@/lib/prisma'
@@ -148,7 +149,8 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
       const debitTx = existing.category === 'Transfer Out' ? existing : pair
       const creditTx = existing.category === 'Transfer In' ? existing : pair
 
-      const ops: Parameters<typeof prisma.$transaction>[0] = [
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ops: any[] = [
         prisma.transaction.deleteMany({ where: { transferPairId: existing.transferPairId, userId: session.user.id } }),
       ]
       if (debitTx) ops.push(prisma.account.update({ where: { id: debitTx.accountId }, data: { balance: { increment: Number(debitTx.amount) } } }))

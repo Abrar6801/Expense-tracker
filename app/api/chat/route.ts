@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { prisma } from '@/lib/prisma'
@@ -370,7 +371,7 @@ async function executeTool(name: string, input: ToolInput, userId: string) {
 
 // ─── Tool definitions ──────────────────────────────────────────────────────────
 
-const tools: Groq.Chat.CompletionCreateParams.Tool[] = [
+const tools: Groq.Chat.Completions.ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
