@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum AccountType {
+  BANK
+  CREDIT_CARD
+  CASH
+}
+
+enum TransactionType {
+  EXPENSE
+  INCOME
+  TRANSFER
+}
+
+model Account {
+  id              String           @id @default(cuid())
+  userId          String
+  name            String
+  type            AccountType
+  balance         Decimal          @default(0) @db.Decimal(19, 4)
+  currency        String           @default("USD")
+  color           String?
+  lastFour        String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  transactions    Transaction[]
+  plannedExpenses PlannedExpense[]
+
+  @@index([userId])
+}
+
+model PlannedExpense {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  amount    Decimal  @db.Decimal(19, 4)
+  category  String
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([accountId])
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  userId      String
+  accountId   String
+  account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  type           TransactionType
+  amount         Decimal         @db.Decimal(19, 4)
+  category       String
+  description    String?
+  date           DateTime        @default(now())
+  transferPairId String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([userId, date])
+  @@index([userId, category])
+}
+
+model UserPreferences {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  customCategories String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
