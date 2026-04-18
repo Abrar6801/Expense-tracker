@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/sidebar'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { ChatPanel } from '@/components/chat/chat-panel'
+import { SwipeNavigator } from '@/components/layout/swipe-navigator'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
@@ -25,6 +26,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         </main>
       </div>
       <MobileNav />
+      <SwipeNavigator />
       <ChatPanel />
     </div>
   )
