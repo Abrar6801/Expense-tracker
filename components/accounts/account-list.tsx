@@ -15,18 +15,6 @@ export function AccountList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Your accounts</h2>
-          <p className="text-sm text-muted-foreground">
-            {isLoading ? '—' : `${accounts?.length ?? 0} account${accounts?.length === 1 ? '' : 's'}`}
-          </p>
-        </div>
-        <Button onClick={openAddAccount} size="sm">
-          <Plus className="mr-1.5 h-4 w-4" />
-          Add account
-        </Button>
-      </div>
 
       {isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">

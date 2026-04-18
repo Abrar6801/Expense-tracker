@@ -32,20 +32,6 @@ export function TransactionList() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">Transactions</h2>
-          <p className="text-sm text-muted-foreground">
-            {isLoading ? '—' : `${total} transaction${total === 1 ? '' : 's'}`}
-          </p>
-        </div>
-        <Button onClick={() => openAddTransaction()} size="sm">
-          <Plus className="mr-1.5 h-4 w-4" />
-          Add transaction
-        </Button>
-      </div>
-
       {/* Filters */}
       <TransactionFiltersBar filters={filters} onChange={setFilters} />
 
