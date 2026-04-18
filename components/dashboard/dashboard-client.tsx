@@ -14,9 +14,10 @@ import { TransactionForm } from '@/components/transactions/transaction-form'
 
 interface DashboardClientProps {
   email?: string
+  displayName?: string
 }
 
-export function DashboardClient({ email }: DashboardClientProps) {
+export function DashboardClient({ email, displayName }: DashboardClientProps) {
   const { data: stats, isLoading } = useDashboardStats()
   const { isAddTransactionOpen, openAddTransaction, closeAddTransaction } = useUIStore()
 
@@ -39,7 +40,7 @@ export function DashboardClient({ email }: DashboardClientProps) {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
               Good {getGreeting()},{' '}
-              <span className="gradient-text">{getFirstName(email)}</span>
+              <span className="gradient-text">{displayName ?? getFirstName(email)}</span>
             </h1>
             <p className="text-sm text-white/40 mt-1">
               Here&apos;s your financial overview for this month

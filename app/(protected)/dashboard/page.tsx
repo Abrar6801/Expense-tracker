@@ -10,5 +10,8 @@ export default async function DashboardPage() {
     data: { session },
   } = await supabase.auth.getSession()
 
-  return <DashboardClient email={session?.user?.email} />
+  const meta = session?.user?.user_metadata
+  const displayName = meta?.full_name ?? meta?.name ?? undefined
+
+  return <DashboardClient email={session?.user?.email} displayName={displayName} />
 }
