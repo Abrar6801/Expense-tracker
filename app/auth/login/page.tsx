@@ -79,31 +79,6 @@ function LoginForm() {
     }
   }
 
-  async function fillDemo() {
-    const emailInput = document.getElementById('email') as HTMLInputElement
-    const passwordInput = document.getElementById('password') as HTMLInputElement
-    if (emailInput) emailInput.value = 'demo@example.com'
-    if (passwordInput) passwordInput.value = 'demo1234'
-
-    setIsLoading(true)
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: 'demo@example.com',
-        password: 'demo1234',
-      })
-      if (error) {
-        toast.error(error.message)
-        return
-      }
-      router.push('/dashboard')
-      router.refresh()
-    } catch {
-      toast.error('Something went wrong. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -139,7 +114,7 @@ function LoginForm() {
               type="email"
               placeholder="you@example.com"
               autoComplete="email"
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
               {...register('email')}
             />
             {errors.email && (
@@ -154,7 +129,7 @@ function LoginForm() {
               type="password"
               placeholder="••••••••"
               autoComplete="current-password"
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
               {...register('password')}
             />
             {errors.password && (
@@ -168,15 +143,6 @@ function LoginForm() {
           </Button>
         </form>
 
-        <Button
-          type="button"
-          variant="ghost"
-          className="mt-2 w-full text-muted-foreground"
-          onClick={fillDemo}
-          disabled={isLoading || isGoogleLoading}
-        >
-          Use demo account
-        </Button>
       </CardContent>
     </Card>
   )
