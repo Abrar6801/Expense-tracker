@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { UserMenu } from '@/components/layout/user-menu'
 
 interface HeaderProps {
@@ -11,17 +11,17 @@ interface HeaderProps {
 
 export function Header({ title, email, action }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md lg:hidden">
+    <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-black/60 backdrop-blur-xl md:hidden">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-            <TrendingUp className="h-4 w-4 text-primary" />
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/25 shrink-0">
+            <Sparkles className="text-white" style={{ height: '0.9rem', width: '0.9rem' }} />
           </div>
-          <h1 className="text-base font-semibold">{title}</h1>
+          <h1 className="text-sm font-semibold text-white">{title}</h1>
         </div>
         <div className="flex items-center gap-2">
           {action}
-          <UserMenu email={email} />
+          <UserMenu email={email} compact />
         </div>
       </div>
     </header>

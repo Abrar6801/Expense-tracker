@@ -34,15 +34,15 @@ export function DashboardClient({ email, displayName }: DashboardClientProps) {
         }
       />
 
-      <div className="p-4 lg:p-6 space-y-6">
-        {/* Page header */}
-        <div className="hidden lg:flex items-center justify-between">
+      <div className="p-4 sm:p-5 lg:p-6 space-y-4 lg:space-y-6">
+        {/* Page header — visible at md+ */}
+        <div className="hidden md:flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-xl lg:text-2xl font-bold tracking-tight">
               Good {getGreeting()},{' '}
               <span className="gradient-text">{displayName ?? getFirstName(email)}</span>
             </h1>
-            <p className="text-sm text-white/40 mt-1">
+            <p className="text-xs lg:text-sm text-white/40 mt-1">
               Here&apos;s your financial overview for this month
             </p>
           </div>
@@ -97,7 +97,7 @@ export function DashboardClient({ email, displayName }: DashboardClientProps) {
 
         {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="xl:col-span-2 space-y-4 lg:space-y-6">
+          <div className="lg:col-span-2 space-y-4 lg:space-y-6">
             <RecentTransactions />
           </div>
           <div className="space-y-4 lg:space-y-6">

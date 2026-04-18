@@ -19,22 +19,24 @@ export function TransactionsClient({ email }: TransactionsClientProps) {
         title="Transactions"
         email={email}
         action={
-          <Button size="sm" className="h-8 text-xs" onClick={() => openAddTransaction()}>
+          <Button size="sm" className="h-8 text-xs bg-violet-600 hover:bg-violet-500 border-0" onClick={() => openAddTransaction()}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             Add
           </Button>
         }
       />
 
-      <div className="p-4 lg:p-6 space-y-6">
-        <div className="hidden lg:flex items-center justify-between">
+      <div className="p-4 sm:p-5 lg:p-6 space-y-4 lg:space-y-6">
+        {/* Page header — visible at md+ */}
+        <div className="hidden md:flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">Transactions</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              All your income and expenses in one place
-            </p>
+            <h1 className="text-xl lg:text-2xl font-bold tracking-tight text-white">Transactions</h1>
+            <p className="text-xs lg:text-sm text-white/40 mt-1">All your income and expenses in one place</p>
           </div>
-          <Button onClick={() => openAddTransaction()}>
+          <Button
+            onClick={() => openAddTransaction()}
+            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 border-0 shadow-lg shadow-violet-500/20"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add transaction
           </Button>

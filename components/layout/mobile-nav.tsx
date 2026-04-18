@@ -16,7 +16,7 @@ export function MobileNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-black/60 backdrop-blur-2xl border-t border-white/[0.06]"
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-black/60 backdrop-blur-2xl border-t border-white/[0.06]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="flex">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {

@@ -69,7 +69,7 @@ export function AccountCard({ account }: AccountCardProps) {
         <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full opacity-10" style={{ background: color }} />
         <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full opacity-5" style={{ background: color }} />
 
-        <div className="relative p-5">
+        <div className="relative p-4 sm:p-5">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
               <div
@@ -130,7 +130,7 @@ export function AccountCard({ account }: AccountCardProps) {
 
           <div className="mt-5">
             <p className="text-[10px] uppercase tracking-widest text-white/30 mb-1">{isCreditCard ? 'Amount Owed' : 'Balance'}</p>
-            <p className={`text-3xl font-bold font-mono tracking-tight ${isNegative ? 'text-rose-400' : 'text-white'}`}>
+            <p className={`text-2xl sm:text-3xl font-bold font-mono tracking-tight ${isNegative ? 'text-rose-400' : 'text-white'}`}>
               {formatCurrency(Math.abs(balance), account.currency)}
             </p>
           </div>

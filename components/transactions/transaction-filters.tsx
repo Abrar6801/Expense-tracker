@@ -33,7 +33,7 @@ export function TransactionFiltersBar({ filters, onChange }: TransactionFiltersP
   }
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    <div className="flex flex-wrap gap-2">
       {/* Date range */}
       <Select
         value={filters.dateRange ?? 'all'}
@@ -41,14 +41,12 @@ export function TransactionFiltersBar({ filters, onChange }: TransactionFiltersP
           onChange({ ...filters, dateRange: v as TransactionFilters['dateRange'], page: 1 })
         }
       >
-        <SelectTrigger className="w-auto min-w-[140px] shrink-0 h-8 text-xs">
+        <SelectTrigger className="w-[130px] sm:w-[150px] h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white/70">
           <SelectValue placeholder="All time" />
         </SelectTrigger>
         <SelectContent>
           {DATE_FILTER_OPTIONS.map(({ label, value }) => (
-            <SelectItem key={value} value={value}>
-              {label}
-            </SelectItem>
+            <SelectItem key={value} value={value}>{label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -61,7 +59,7 @@ export function TransactionFiltersBar({ filters, onChange }: TransactionFiltersP
             onChange({ ...filters, accountId: v === 'all' ? undefined : v, page: 1 })
           }
         >
-          <SelectTrigger className="w-auto min-w-[140px] shrink-0 h-8 text-xs">
+          <SelectTrigger className="w-[130px] sm:w-[150px] h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white/70">
             <SelectValue placeholder="All accounts" />
           </SelectTrigger>
           <SelectContent>
@@ -69,10 +67,7 @@ export function TransactionFiltersBar({ filters, onChange }: TransactionFiltersP
             {accounts.map((account) => (
               <SelectItem key={account.id} value={account.id}>
                 <div className="flex items-center gap-2">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: account.color ?? '#6366f1' }}
-                  />
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: account.color ?? '#6366f1' }} />
                   {account.name}
                 </div>
               </SelectItem>
@@ -85,14 +80,10 @@ export function TransactionFiltersBar({ filters, onChange }: TransactionFiltersP
       <Select
         value={filters.type ?? 'all'}
         onValueChange={(v) =>
-          onChange({
-            ...filters,
-            type: v === 'all' ? undefined : (v as TransactionType),
-            page: 1,
-          })
+          onChange({ ...filters, type: v === 'all' ? undefined : (v as TransactionType), page: 1 })
         }
       >
-        <SelectTrigger className="w-auto min-w-[120px] shrink-0 h-8 text-xs">
+        <SelectTrigger className="w-[110px] sm:w-[130px] h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white/70">
           <SelectValue placeholder="All types" />
         </SelectTrigger>
         <SelectContent>
@@ -109,15 +100,13 @@ export function TransactionFiltersBar({ filters, onChange }: TransactionFiltersP
           onChange({ ...filters, category: v === 'all' ? undefined : v, page: 1 })
         }
       >
-        <SelectTrigger className="w-auto min-w-[140px] shrink-0 h-8 text-xs">
+        <SelectTrigger className="w-[130px] sm:w-[150px] h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white/70">
           <SelectValue placeholder="All categories" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All categories</SelectItem>
           {categories.map((cat) => (
-            <SelectItem key={cat} value={cat}>
-              {cat}
-            </SelectItem>
+            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -127,10 +116,10 @@ export function TransactionFiltersBar({ filters, onChange }: TransactionFiltersP
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 text-xs text-muted-foreground hover:text-foreground shrink-0"
+          className="h-9 text-xs text-white/40 hover:text-white/70 hover:bg-white/[0.04] px-3"
           onClick={clearFilters}
         >
-          <X className="mr-1 h-3 w-3" />
+          <X className="mr-1.5 h-3 w-3" />
           Clear
         </Button>
       )}

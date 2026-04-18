@@ -32,20 +32,20 @@ export function SpendingChart() {
 
   return (
     <div className="glass-card rounded-2xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-white/[0.06]">
+      <div className="px-4 sm:px-5 py-4 border-b border-white/[0.06]">
         <h3 className="text-sm font-semibold text-white">Spending by Category</h3>
         <p className="text-xs text-white/35 mt-0.5">This month</p>
       </div>
 
-      <div className="px-5 py-4">
+      <div className="px-4 sm:px-5 py-4">
         {isLoading && (
           <div className="flex flex-col items-center gap-4">
-            <Skeleton className="h-36 w-36 rounded-full bg-white/5" />
-            <div className="w-full space-y-2">
+            <Skeleton className="h-32 w-32 rounded-full bg-white/5" />
+            <div className="w-full space-y-2.5">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <Skeleton className="h-2.5 w-24 bg-white/5" />
-                  <Skeleton className="h-2.5 w-12 bg-white/5" />
+                  <Skeleton className="h-2.5 w-14 bg-white/5" />
                 </div>
               ))}
             </div>
@@ -53,7 +53,7 @@ export function SpendingChart() {
         )}
 
         {!isLoading && chartData.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-36 gap-3">
+          <div className="flex flex-col items-center justify-center h-40 gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04] border border-white/[0.06]">
               <BarChart3 className="h-5 w-5 text-white/20" />
             </div>
@@ -63,14 +63,14 @@ export function SpendingChart() {
 
         {!isLoading && chartData.length > 0 && (
           <>
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={170}>
               <PieChart>
                 <Pie
                   data={chartData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={52}
-                  outerRadius={80}
+                  innerRadius="42%"
+                  outerRadius="65%"
                   paddingAngle={3}
                   dataKey="total"
                   nameKey="category"
@@ -88,9 +88,9 @@ export function SpendingChart() {
               </PieChart>
             </ResponsiveContainer>
 
-            <div className="mt-3 space-y-2">
+            <div className="mt-2 space-y-2">
               {chartData.slice(0, 6).map((item, index) => (
-                <div key={item.category} className="flex items-center justify-between text-sm">
+                <div key={item.category} className="flex items-center justify-between">
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className="h-2 w-2 shrink-0 rounded-full"

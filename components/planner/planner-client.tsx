@@ -85,11 +85,11 @@ export function PlannerClient({ email }: PlannerClientProps) {
     <>
       <Header title="Budget Planner" email={email} />
 
-      <div className="p-4 lg:p-6 space-y-6">
+      <div className="p-4 sm:p-5 lg:p-6 space-y-4 lg:space-y-6">
         {/* Page header */}
-        <div className="hidden lg:block">
-          <h1 className="text-2xl font-bold tracking-tight text-white">Budget Planner</h1>
-          <p className="text-sm text-white/40 mt-1">Plan ahead and see your projected financial position</p>
+        <div className="hidden md:block">
+          <h1 className="text-xl lg:text-2xl font-bold tracking-tight text-white">Budget Planner</h1>
+          <p className="text-xs lg:text-sm text-white/40 mt-1">Plan ahead and see your projected financial position</p>
         </div>
 
         {/* Stats — same style as dashboard */}

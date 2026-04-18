@@ -25,9 +25,10 @@ import {
 
 interface UserMenuProps {
   email?: string
+  compact?: boolean
 }
 
-export function UserMenu({ email }: UserMenuProps) {
+export function UserMenu({ email, compact }: UserMenuProps) {
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showNameDialog, setShowNameDialog] = useState(false)
@@ -81,24 +82,37 @@ export function UserMenu({ email }: UserMenuProps) {
     ? displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : email?.slice(0, 2).toUpperCase() ?? 'U'
 
+  const avatar = (
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600/30 to-indigo-600/30 border border-violet-500/20 text-xs font-bold text-violet-300">
+      {initials}
+    </div>
+  )
+
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-white/[0.04] transition-colors group">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600/30 to-indigo-600/30 border border-violet-500/20 text-xs font-bold text-violet-300">
-              {initials}
-            </div>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-xs font-medium truncate text-white/80">
-                {displayName || email?.split('@')[0] || 'Account'}
-              </p>
-              <p className="text-[10px] text-white/30 truncate">{email}</p>
-            </div>
-            <ChevronUp className="h-3.5 w-3.5 text-white/30 group-hover:text-white/50 transition-colors" />
-          </button>
+          {compact ? (
+            <button
+              title="Account"
+              className="flex items-center justify-center rounded-xl p-1.5 hover:bg-white/[0.04] transition-colors"
+            >
+              {avatar}
+            </button>
+          ) : (
+            <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-white/[0.04] transition-colors group">
+              {avatar}
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-xs font-medium truncate text-white/80">
+                  {displayName || email?.split('@')[0] || 'Account'}
+                </p>
+                <p className="text-[10px] text-white/30 truncate">{email}</p>
+              </div>
+              <ChevronUp className="h-3.5 w-3.5 text-white/30 group-hover:text-white/50 transition-colors" />
+            </button>
+          )}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 glass border-white/[0.08]">
+        <DropdownMenuContent align={compact ? 'start' : 'end'} side={compact ? 'right' : 'top'} className="w-56 glass border-white/[0.08]">
           <div className="px-3 py-2.5">
             <p className="text-xs font-medium text-white/80 truncate">
               {displayName || email?.split('@')[0]}
