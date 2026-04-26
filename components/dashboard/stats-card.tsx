@@ -12,6 +12,7 @@ interface StatsCardProps {
   gradient?: string
   isLoading?: boolean
   showSign?: boolean
+  badge?: { value: number; label: string; invertColor?: boolean }
 }
 
 export function StatsCard({
@@ -24,6 +25,7 @@ export function StatsCard({
   gradient,
   isLoading,
   showSign,
+  badge,
 }: StatsCardProps) {
   if (isLoading) {
     return (
@@ -66,6 +68,16 @@ export function StatsCard({
             {isPositive && '+'}
             {formatCurrency(value, currency)}
           </p>
+          {badge && (
+            <p className={cn(
+              'text-[9px] font-medium mt-1',
+              badge.invertColor
+                ? badge.value > 0 ? 'text-rose-400' : 'text-emerald-400'
+                : badge.value > 0 ? 'text-emerald-400' : 'text-rose-400'
+            )}>
+              {badge.value > 0 ? '+' : ''}{badge.value}% {badge.label}
+            </p>
+          )}
         </div>
 
         <div

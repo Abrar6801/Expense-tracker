@@ -24,21 +24,25 @@ enum TransactionType {
   EXPENSE
   INCOME
   TRANSFER
+  REIMBURSEMENT
 }
 
 model Account {
-  id              String           @id @default(cuid())
-  userId          String
-  name            String
-  type            AccountType
-  balance         Decimal          @default(0) @db.Decimal(19, 4)
-  currency        String           @default("USD")
-  color           String?
-  lastFour        String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  transactions    Transaction[]
-  plannedExpenses PlannedExpense[]
+  id                 String              @id @default(cuid())
+  userId             String
+  name               String
+  type               AccountType
+  balance            Decimal             @default(0) @db.Decimal(19, 4)
+  currency           String              @default("USD")
+  color              String?
+  lastFour           String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  transactions       Transaction[]
+  plannedExpenses    PlannedExpense[]
+  recurringTemplates RecurringTemplate[]
+  savingsGoals       SavingsGoal[]
+  cashEnvelopes      CashEnvelope[]
 
   @@index([userId])
 }
@@ -59,23 +63,26 @@ model PlannedExpense {
 }
 
 model Transaction {
-  id          String          @id @default(cuid())
-  userId      String
-  accountId   String
-  account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  id             String        @id @default(cuid())
+  userId         String
+  accountId      String
+  account        Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   type           TransactionType
-  amount         Decimal         @db.Decimal(19, 4)
+  amount         Decimal       @db.Decimal(19, 4)
   category       String
   description    String?
-  date           DateTime        @default(now())
+  date           DateTime      @default(now())
   transferPairId String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  envelopeId     String?
+  envelope       CashEnvelope? @relation(fields: [envelopeId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@index([userId])
   @@index([accountId])
   @@index([userId, date])
   @@index([userId, category])
+  @@index([envelopeId])
 }
 
 model ExpectedIncome {
@@ -98,4 +105,121 @@ model UserPreferences {
   customCategories String[]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model BudgetLimit {
+  id        String   @id @default(cuid())
+  userId    String
+  category  String
+  amount    Decimal  @db.Decimal(19, 4)
+  month     Int
+  year      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, category, month, year])
+  @@index([userId])
+}
+
+model RecurringTemplate {
+  id          String          @id @default(cuid())
+  userId      String
+  accountId   String
+  account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  type        TransactionType
+  amount      Decimal         @db.Decimal(19, 4)
+  category    String
+  description String?
+  interval    String
+  nextDue     DateTime
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([accountId])
+}
+
+model SavingsGoal {
+  id           String    @id @default(cuid())
+  userId       String
+  name         String
+  targetAmount Decimal   @db.Decimal(19, 4)
+  accountId    String?
+  account      Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  deadline     DateTime?
+  color        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model CashEnvelope {
+  id           String        @id @default(cuid())
+  userId       String
+  name         String
+  totalAmount  Decimal       @db.Decimal(19, 4)
+  accountId    String
+  account      Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([accountId])
+}
+
+model SplitGroup {
+  id        String             @id @default(cuid())
+  userId    String
+  name      String
+  splits    Split[]
+  members   SplitGroupMember[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId])
+}
+
+model SplitGroupMember {
+  id        String     @id @default(cuid())
+  groupId   String
+  group     SplitGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime   @default(now())
+
+  @@index([groupId])
+}
+
+model Split {
+  id          String        @id @default(cuid())
+  userId      String
+  title       String
+  totalAmount Decimal       @db.Decimal(19, 4)
+  date        DateTime      @default(now())
+  groupId     String?
+  group       SplitGroup?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  members     SplitMember[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([groupId])
+}
+
+model SplitMember {
+  id            String    @id @default(cuid())
+  splitId       String
+  split         Split     @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  name          String
+  amount        Decimal   @db.Decimal(19, 4)
+  received      Boolean   @default(false)
+  receivedAt    DateTime?
+  accountId     String?
+  transactionId String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([splitId])
 }

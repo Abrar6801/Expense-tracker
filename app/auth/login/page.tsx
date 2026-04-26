@@ -27,7 +27,9 @@ function GoogleIcon() {
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard'
+  const rawRedirect = searchParams.get('redirectTo') ?? '/dashboard'
+  // Only allow relative paths to prevent open redirect
+  const redirectTo = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') && !rawRedirect.includes(':') ? rawRedirect : '/dashboard'
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const supabase = createClient()

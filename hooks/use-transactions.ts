@@ -5,14 +5,10 @@ import { toast } from 'sonner'
 import type { SerializedTransaction, TransactionFilters } from '@/types'
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/lib/validations'
 
-// ─── Key factory ─────────────────────────────────────────────────────────────
-
 const transactionKeys = {
   all: ['transactions'] as const,
   list: (filters: TransactionFilters) => ['transactions', 'list', filters] as const,
 }
-
-// ─── Fetchers ─────────────────────────────────────────────────────────────────
 
 async function fetchTransactions(
   filters: TransactionFilters
@@ -22,6 +18,7 @@ async function fetchTransactions(
   if (filters.type) params.set('type', filters.type)
   if (filters.category) params.set('category', filters.category)
   if (filters.dateRange) params.set('dateRange', filters.dateRange)
+  if (filters.search) params.set('search', filters.search)
   if (filters.page) params.set('page', String(filters.page))
   if (filters.pageSize) params.set('pageSize', String(filters.pageSize))
 
@@ -30,9 +27,7 @@ async function fetchTransactions(
   return res.json()
 }
 
-async function createTransaction(
-  input: CreateTransactionInput
-): Promise<SerializedTransaction> {
+async function createTransaction(input: CreateTransactionInput): Promise<SerializedTransaction> {
   const res = await fetch('/api/transactions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -42,14 +37,10 @@ async function createTransaction(
     const err = await res.json()
     throw new Error(err.error ?? 'Failed to create transaction')
   }
-  const data = await res.json()
-  return data.transaction
+  return (await res.json()).transaction
 }
 
-async function updateTransaction({
-  id,
-  ...input
-}: UpdateTransactionInput): Promise<SerializedTransaction> {
+async function updateTransaction({ id, ...input }: UpdateTransactionInput): Promise<SerializedTransaction> {
   const res = await fetch(`/api/transactions/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -59,16 +50,12 @@ async function updateTransaction({
     const err = await res.json()
     throw new Error(err.error ?? 'Failed to update transaction')
   }
-  const data = await res.json()
-  return data.transaction
+  return (await res.json()).transaction
 }
 
 async function createTransfer(input: {
-  fromAccountId: string
-  toAccountId: string
-  amount: number
-  date?: Date
-  description?: string
+  fromAccountId: string; toAccountId: string; amount: number
+  date?: Date; description?: string
 }): Promise<SerializedTransaction> {
   const res = await fetch('/api/transfers', {
     method: 'POST',
@@ -90,8 +77,6 @@ async function deleteTransaction(id: string): Promise<void> {
   }
 }
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
-
 export function useTransactions(filters: TransactionFilters = {}) {
   return useQuery({
     queryKey: transactionKeys.list(filters),
@@ -101,7 +86,6 @@ export function useTransactions(filters: TransactionFilters = {}) {
 
 export function useCreateTransaction() {
   const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: createTransaction,
     onSuccess: () => {
@@ -110,15 +94,12 @@ export function useCreateTransaction() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       toast.success('Transaction added')
     },
-    onError: (error: Error) => {
-      toast.error(error.message)
-    },
+    onError: (error: Error) => toast.error(error.message),
   })
 }
 
 export function useUpdateTransaction() {
   const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: updateTransaction,
     onSuccess: () => {
@@ -127,9 +108,7 @@ export function useUpdateTransaction() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       toast.success('Transaction updated')
     },
-    onError: (error: Error) => {
-      toast.error(error.message)
-    },
+    onError: (error: Error) => toast.error(error.message),
   })
 }
 
@@ -149,7 +128,6 @@ export function useCreateTransfer() {
 
 export function useDeleteTransaction() {
   const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: deleteTransaction,
     onSuccess: () => {
@@ -158,8 +136,6 @@ export function useDeleteTransaction() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       toast.success('Transaction deleted')
     },
-    onError: (error: Error) => {
-      toast.error(error.message)
-    },
+    onError: (error: Error) => toast.error(error.message),
   })
 }

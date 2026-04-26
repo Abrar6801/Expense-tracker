@@ -2,14 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, CreditCard, ArrowLeftRight, CalendarClock } from 'lucide-react'
+import { LayoutDashboard, CreditCard, ArrowLeftRight, CalendarClock, Target, Wallet, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
   { href: '/accounts', label: 'Accounts', icon: CreditCard },
   { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
   { href: '/planner', label: 'Planner', icon: CalendarClock },
+  { href: '/goals', label: 'Goals', icon: Target },
+  { href: '/envelopes', label: 'Envelopes', icon: Wallet },
+  { href: '/splits', label: 'Splits', icon: Users },
 ]
 
 export function MobileNav() {
@@ -26,18 +29,18 @@ export function MobileNav() {
               key={href}
               href={href}
               className={cn(
-                'flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-all duration-200 relative',
+                'flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[9px] font-medium transition-all duration-200 relative',
                 isActive ? 'text-violet-300' : 'text-white/30'
               )}
             >
               {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" />
               )}
               <div className={cn(
-                'flex h-11 w-11 items-center justify-center rounded-xl transition-all',
+                'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
                 isActive ? 'bg-violet-500/20' : ''
               )}>
-                <Icon style={{ height: '1.2rem', width: '1.2rem' }} />
+                <Icon style={{ height: '1rem', width: '1rem' }} />
               </div>
               {label}
             </Link>

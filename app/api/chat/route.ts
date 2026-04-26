@@ -1,12 +1,68 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
+import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 import { TransactionType } from '@prisma/client'
 
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
+const MODEL = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile'
 const MAX_ITERATIONS = 8
+
+// ─── Rate limiting (20 requests / minute per user) ────────────────────────────
+
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT = 20
+const RATE_WINDOW_MS = 60_000
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(userId)
+  if (!entry || entry.resetAt < now) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW_MS })
+    return true
+  }
+  if (entry.count >= RATE_LIMIT) return false
+  entry.count++
+  return true
+}
+
+// ─── Tool input schemas (validate LLM-generated arguments) ───────────────────
+
+const toolSchemas: Record<string, z.ZodTypeAny> = {
+  get_accounts: z.object({}),
+  get_financial_overview: z.object({}),
+  create_transfer: z.object({
+    fromAccountId: z.string().min(1),
+    toAccountId: z.string().min(1),
+    amount: z.number().positive().max(9_999_999),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    description: z.string().max(255).optional(),
+  }),
+  create_transaction: z.object({
+    accountId: z.string().min(1),
+    type: z.enum(['EXPENSE', 'INCOME']),
+    amount: z.number().positive().max(9_999_999),
+    category: z.string().min(1).max(50),
+    description: z.string().max(255).optional(),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  }),
+  query_transactions: z.object({
+    accountId: z.string().optional(),
+    type: z.enum(['EXPENSE', 'INCOME']).optional(),
+    category: z.string().max(50).optional(),
+    dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    limit: z.number().int().min(1).max(50).optional(),
+  }),
+  get_spending_summary: z.object({
+    type: z.enum(['EXPENSE', 'INCOME']).optional(),
+    dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    accountId: z.string().optional(),
+  }),
+}
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -74,15 +130,14 @@ PRE-COMPUTED DATE RANGES (use these exact values — do NOT calculate dates your
 - "this month"   → dateFrom: "${d.thisMonth.from}" dateTo: "${d.thisMonth.to}"
 - "last month"   → dateFrom: "${d.lastMonth.from}" dateTo: "${d.lastMonth.to}"
 - "this year"    → dateFrom: "${d.thisYear.from}"  dateTo: "${d.thisYear.to}"
-- Specific date like "April 15" → dateFrom: "${new Date().getFullYear()}-04-15" dateTo: "${new Date().getFullYear()}-04-15"
 
 TOOL SELECTION GUIDE:
-- "overview" / "how am I doing" / "summary" / "net worth" → get_financial_overview (one call, most efficient)
-- "how much did I spend on/in X" / "total spending" → get_spending_summary with type=EXPENSE (transfers excluded automatically)
-- "how much did I earn/make on/in X" / "total income" → get_spending_summary with type=INCOME (transfers excluded automatically)
-- "show my transactions" / "what did I buy" / "when did I spend on X" → query_transactions (for listing only, NOT for totals)
+- "overview" / "how am I doing" / "summary" / "net worth" → get_financial_overview
+- "how much did I spend on/in X" / "total spending" → get_spending_summary with type=EXPENSE
+- "how much did I earn/make on/in X" / "total income" → get_spending_summary with type=INCOME
+- "show my transactions" / "what did I buy" / "when did I spend on X" → query_transactions
 - "add expense/income" / "I spent X" / "I earned X" → get_accounts first, then create_transaction
-- "transfer X from A to B" / "move money between accounts" → get_accounts first, then create_transfer
+- "transfer X from A to B" → get_accounts first, then create_transfer
 - "can I afford X" → get_financial_overview to check balances
 
 CATEGORY INFERENCE (auto-detect, never ask):
@@ -103,21 +158,19 @@ RULES:
 1. For create_transaction: ALWAYS call get_accounts first to get the account ID
 2. If user has multiple accounts and doesn't specify, ask which one BEFORE calling get_accounts
 3. Default date is "${d.today}" unless user specifies
-4. CRITICAL — TRANSFERS ARE NOT INCOME OR EXPENSES: Moving money between accounts is NOT spending and NOT earning. NEVER count transfer amounts in spend/earn totals. get_spending_summary automatically excludes transfers. query_transactions also excludes transfers but must NOT be used to compute totals.
-5. For ANY "how much did I spend" question → ALWAYS use get_spending_summary with type=EXPENSE
-6. For ANY "how much did I earn/make" question → ALWAYS use get_spending_summary with type=INCOME
-7. NEVER sum up amounts from query_transactions to answer spend/earn total questions — use get_spending_summary instead
+4. TRANSFERS ARE NOT INCOME OR EXPENSES — never count them in spend/earn totals
+5. For "how much did I spend" → ALWAYS use get_spending_summary with type=EXPENSE
+6. For "how much did I earn" → ALWAYS use get_spending_summary with type=INCOME
+7. NEVER sum amounts from query_transactions to answer totals — use get_spending_summary
 8. Never make up transaction data — only report what's in the database
-9. If no data found for a query, say so clearly and suggest a broader date range
 
 RESPONSE STYLE:
 - Be conversational, precise, and helpful
 - Use bullet points for lists, bold for totals
-- For spending queries always show: total → by account → by category
-- For transaction lists: show date, description/category, amount, account
-- For "can I afford X": state the relevant account balance and give a clear recommendation
-- Add a brief insight when relevant (e.g. "That's your highest spending category this month")
-- Keep responses concise — no unnecessary filler`
+- For spending queries: total → by account → by category
+- For transaction lists: date, description/category, amount, account
+- Add a brief insight when relevant (e.g. "That's your highest category this month")
+- Keep responses concise — no filler`
 }
 
 // ─── Tool execution ────────────────────────────────────────────────────────────
@@ -126,7 +179,6 @@ type ToolInput = Record<string, unknown>
 
 async function executeTool(name: string, input: ToolInput, userId: string) {
   switch (name) {
-
     case 'get_accounts': {
       const accounts = await prisma.account.findMany({
         where: { userId },
@@ -156,22 +208,21 @@ async function executeTool(name: string, input: ToolInput, userId: string) {
       ])
 
       const netWorth = accounts.reduce((s, a) => s + Number(a.balance), 0)
-
-      let currentIncome = 0, currentExpenses = 0, currentTransfers = 0
+      let currentIncome = 0, currentExpenses = 0
       const categoryTotals: Record<string, number> = {}
       for (const t of currentTx) {
         const amt = Number(t.amount)
         if (t.type === TransactionType.INCOME) currentIncome += amt
-        else if (t.type === TransactionType.EXPENSE) { currentExpenses += amt; categoryTotals[t.category] = (categoryTotals[t.category] ?? 0) + amt }
-        else if (t.type === TransactionType.TRANSFER && t.category === 'Transfer Out') currentTransfers += amt
+        else if (t.type === TransactionType.EXPENSE) {
+          currentExpenses += amt
+          categoryTotals[t.category] = (categoryTotals[t.category] ?? 0) + amt
+        }
       }
-
       let lastIncome = 0, lastExpenses = 0
       for (const t of lastTx) {
         if (t.type === TransactionType.INCOME) lastIncome += Number(t.amount)
         else if (t.type === TransactionType.EXPENSE) lastExpenses += Number(t.amount)
       }
-
       const topCategories = Object.entries(categoryTotals)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5)
@@ -180,18 +231,8 @@ async function executeTool(name: string, input: ToolInput, userId: string) {
       return {
         netWorth,
         accounts: accounts.map(a => ({ name: a.name, type: a.type, balance: Number(a.balance), currency: a.currency })),
-        thisMonth: {
-          income: currentIncome,
-          expenses: currentExpenses,
-          net: currentIncome - currentExpenses,
-          transfers: currentTransfers,
-          topCategories,
-        },
-        lastMonth: {
-          income: lastIncome,
-          expenses: lastExpenses,
-          net: lastIncome - lastExpenses,
-        },
+        thisMonth: { income: currentIncome, expenses: currentExpenses, net: currentIncome - currentExpenses, topCategories },
+        lastMonth: { income: lastIncome, expenses: lastExpenses, net: lastIncome - lastExpenses },
         vsLastMonth: {
           expenseChange: lastExpenses > 0 ? Math.round(((currentExpenses - lastExpenses) / lastExpenses) * 100) : null,
           incomeChange: lastIncome > 0 ? Math.round(((currentIncome - lastIncome) / lastIncome) * 100) : null,
@@ -237,7 +278,6 @@ async function executeTool(name: string, input: ToolInput, userId: string) {
         accountId: string; type: 'EXPENSE' | 'INCOME'; amount: number
         category: string; description?: string; date?: string
       }
-
       const account = await prisma.account.findFirst({ where: { id: accountId, userId } })
       if (!account) return { error: 'Account not found' }
 
@@ -267,17 +307,18 @@ async function executeTool(name: string, input: ToolInput, userId: string) {
     }
 
     case 'query_transactions': {
-      const { accountId, type, category, dateFrom, dateTo, limit = 20 } = input as {
-        accountId?: string; type?: 'EXPENSE' | 'INCOME'; category?: string
+      const { accountId, category, dateFrom, dateTo, limit = 20 } = input as {
+        accountId?: string; type?: string; category?: string
         dateFrom?: string; dateTo?: string; limit?: number
       }
-
+      // Normalize type to uppercase
+      const rawType = input.type as string | undefined
+      const type = rawType ? rawType.toUpperCase() as TransactionType : undefined
       const transactions = await prisma.transaction.findMany({
         where: {
           userId,
           ...(accountId && { accountId }),
-          // Always exclude TRANSFER unless a specific type is requested
-          type: type ? (type as TransactionType) : { not: TransactionType.TRANSFER },
+          type: type ? type : { notIn: [TransactionType.TRANSFER, TransactionType.REIMBURSEMENT] },
           ...(category && { category: { contains: category, mode: 'insensitive' } }),
           ...((dateFrom || dateTo) && {
             date: {
@@ -290,9 +331,7 @@ async function executeTool(name: string, input: ToolInput, userId: string) {
         orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
         take: Math.min(Number(limit), 50),
       })
-
       if (transactions.length === 0) return { found: 0, transactions: [] }
-
       return {
         found: transactions.length,
         transactions: transactions.map(t => ({
@@ -308,12 +347,12 @@ async function executeTool(name: string, input: ToolInput, userId: string) {
     }
 
     case 'get_spending_summary': {
-      const { dateFrom, dateTo, accountId, type = 'EXPENSE' } = input as {
-        dateFrom?: string; dateTo?: string; accountId?: string; type?: 'EXPENSE' | 'INCOME'
+      const { dateFrom, dateTo, accountId } = input as {
+        dateFrom?: string; dateTo?: string; accountId?: string; type?: string
       }
-
-      const txType = type === 'INCOME' ? TransactionType.INCOME : TransactionType.EXPENSE
-
+      // Normalize type to uppercase to handle LLM returning lowercase
+      const normalizedType = ((input.type as string) ?? 'EXPENSE').toUpperCase()
+      const txType = normalizedType === 'INCOME' ? TransactionType.INCOME : TransactionType.EXPENSE
       const transactions = await prisma.transaction.findMany({
         where: {
           userId,
@@ -328,38 +367,28 @@ async function executeTool(name: string, input: ToolInput, userId: string) {
         },
         include: { account: { select: { name: true, currency: true } } },
       })
-
       const isIncome = txType === TransactionType.INCOME
-
       if (transactions.length === 0) {
         return isIncome
           ? { found: 0, totalIncome: 0, byCategory: [], byAccount: [] }
           : { found: 0, totalExpenses: 0, byCategory: [], byAccount: [] }
       }
-
       const byCategory: Record<string, number> = {}
       const byAccount: Record<string, { name: string; total: number; currency: string }> = {}
       let grandTotal = 0
-
       for (const t of transactions) {
         const amt = Number(t.amount)
         byCategory[t.category] = (byCategory[t.category] ?? 0) + amt
-        if (!byAccount[t.accountId]) {
-          byAccount[t.accountId] = { name: t.account.name, total: 0, currency: t.account.currency }
-        }
+        if (!byAccount[t.accountId]) byAccount[t.accountId] = { name: t.account.name, total: 0, currency: t.account.currency }
         byAccount[t.accountId].total += amt
         grandTotal += amt
       }
-
       return {
         found: transactions.length,
         ...(isIncome ? { totalIncome: grandTotal } : { totalExpenses: grandTotal }),
         byCategory: Object.entries(byCategory)
           .sort(([, a], [, b]) => b - a)
-          .map(([category, total]) => ({
-            category, total,
-            percentage: Math.round((total / grandTotal) * 100),
-          })),
+          .map(([category, total]) => ({ category, total, percentage: Math.round((total / grandTotal) * 100) })),
         byAccount: Object.values(byAccount).sort((a, b) => b.total - a.total),
       }
     }
@@ -371,7 +400,7 @@ async function executeTool(name: string, input: ToolInput, userId: string) {
 
 // ─── Tool definitions ──────────────────────────────────────────────────────────
 
-const tools: Groq.Chat.Completions.ChatCompletionTool[] = [
+const tools: Groq.Chat.ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
@@ -384,7 +413,7 @@ const tools: Groq.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'get_financial_overview',
-      description: 'Get a complete financial snapshot: net worth, all account balances, this month vs last month income/expenses/net, and top spending categories. Use for general questions like "how am I doing", "give me a summary", "what is my net worth".',
+      description: 'Get complete financial snapshot: net worth, account balances, this/last month income/expenses, top spending categories.',
       parameters: { type: 'object', properties: {}, required: [] },
     },
   },
@@ -392,12 +421,12 @@ const tools: Groq.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'create_transfer',
-      description: 'Transfer money between two of the user\'s accounts. Both sides are tagged as TRANSFER and excluded from income/expense reports.',
+      description: "Transfer money between two of the user's accounts.",
       parameters: {
         type: 'object',
         properties: {
-          fromAccountId: { type: 'string', description: 'Source account ID (money leaves here)' },
-          toAccountId: { type: 'string', description: 'Destination account ID (money arrives here)' },
+          fromAccountId: { type: 'string', description: 'Source account ID' },
+          toAccountId: { type: 'string', description: 'Destination account ID' },
           amount: { type: 'number', description: 'Positive amount to transfer' },
           date: { type: 'string', description: 'YYYY-MM-DD, defaults to today' },
           description: { type: 'string', description: 'Optional note' },
@@ -429,7 +458,7 @@ const tools: Groq.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'query_transactions',
-      description: 'List individual transactions for browsing or details only. NEVER use this to compute totals or answer "how much did I spend/earn" — use get_spending_summary for that. Transfers are automatically excluded. Use for: "show my transactions", "what did I buy", "when did I spend on X".',
+      description: 'List individual transactions for browsing only. NEVER use to compute totals — use get_spending_summary for that.',
       parameters: {
         type: 'object',
         properties: {
@@ -448,11 +477,11 @@ const tools: Groq.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'get_spending_summary',
-      description: 'Get totals aggregated by category and account for a date range. Transfers are NEVER included. Use for "how much did I spend" (type=EXPENSE) or "how much did I earn" (type=INCOME). Never use for transfer amounts.',
+      description: 'Get totals by category and account for a date range. Transfers never included. Use type=EXPENSE for spending, type=INCOME for earnings.',
       parameters: {
         type: 'object',
         properties: {
-          type: { type: 'string', enum: ['EXPENSE', 'INCOME'], description: 'EXPENSE for spending queries, INCOME for earnings queries. Defaults to EXPENSE.' },
+          type: { type: 'string', enum: ['EXPENSE', 'INCOME'], description: 'Defaults to EXPENSE' },
           dateFrom: { type: 'string', description: 'YYYY-MM-DD' },
           dateTo: { type: 'string', description: 'YYYY-MM-DD' },
           accountId: { type: 'string', description: 'Optional: filter by account' },
@@ -471,13 +500,27 @@ export async function POST(request: Request) {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { messages } = (await request.json()) as {
-      messages: Array<{ role: 'user' | 'assistant'; content: string }>
+    // Rate limit: 20 requests per minute per user
+    if (!checkRateLimit(session.user.id)) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 })
     }
+
+    const body = await request.json()
+    const messagesSchema = z.object({
+      messages: z.array(z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().max(10_000),
+      })).max(100),
+    })
+    const parsed = messagesSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    }
+    const { messages } = parsed.data
 
     const groqMessages: Groq.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: buildSystemPrompt() },
-      ...messages.map(m => ({ role: m.role, content: m.content })),
+      ...messages.map(m => ({ role: m.role, content: m.content } as Groq.Chat.ChatCompletionMessageParam)),
     ]
 
     let dataChanged = false
@@ -487,25 +530,42 @@ export async function POST(request: Request) {
       iterations++
 
       const response = await client.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+        model: MODEL,
         max_tokens: 1024,
-        temperature: 0.1,
         messages: groqMessages,
         tools,
         tool_choice: 'auto',
       })
 
       const message = response.choices[0].message
+      groqMessages.push(message as Groq.Chat.ChatCompletionMessageParam)
 
       if (!message.tool_calls || message.tool_calls.length === 0) {
         return NextResponse.json({ message: message.content ?? '', dataChanged })
       }
 
-      groqMessages.push(message)
-
       for (const toolCall of message.tool_calls) {
-        let input: ToolInput = {}
-        try { input = JSON.parse(toolCall.function.arguments) as ToolInput } catch { input = {} }
+        let input: ToolInput
+        try {
+          input = JSON.parse(toolCall.function.arguments) as ToolInput
+        } catch {
+          input = {}
+        }
+
+        // Validate tool arguments against schema before execution
+        const schema = toolSchemas[toolCall.function.name]
+        if (schema) {
+          const validation = schema.safeParse(input)
+          if (!validation.success) {
+            groqMessages.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify({ error: 'Invalid tool arguments', details: validation.error.flatten() }),
+            })
+            continue
+          }
+          input = validation.data as ToolInput
+        }
 
         const result = await executeTool(toolCall.function.name, input, session.user.id)
         if (['create_transaction', 'create_transfer'].includes(toolCall.function.name)) dataChanged = true
@@ -521,7 +581,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Request took too long. Please try again.', dataChanged: false })
   } catch (error) {
     console.error('[POST /api/chat]', error)
-    const msg = error instanceof Error ? error.message : 'Internal server error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

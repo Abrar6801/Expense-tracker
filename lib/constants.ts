@@ -39,6 +39,17 @@ export const CURRENCIES = [
   { label: 'CHF — Swiss Franc', value: 'CHF' },
 ] as const
 
+// Approximate rates vs USD for net worth estimation
+export const FX_TO_USD: Record<string, number> = {
+  USD: 1,
+  EUR: 1.08,
+  GBP: 1.27,
+  JPY: 0.0067,
+  CAD: 0.74,
+  AUD: 0.65,
+  CHF: 1.13,
+}
+
 export const CHART_COLORS = [
   '#6366f1',
   '#a855f7',

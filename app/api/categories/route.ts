@@ -56,6 +56,16 @@ export async function POST(request: Request) {
       )
     }
 
+    // Enforce per-user category limit to prevent resource exhaustion
+    const existing = await prisma.userPreferences.findUnique({ where: { userId: session.user.id } })
+    if ((existing?.customCategories.length ?? 0) >= 100) {
+      return NextResponse.json({ error: 'Maximum of 100 custom categories reached' }, { status: 400 })
+    }
+
+    if (existing?.customCategories.includes(name)) {
+      return NextResponse.json({ error: 'Category already exists' }, { status: 409 })
+    }
+
     const prefs = await prisma.userPreferences.upsert({
       where: { userId: session.user.id },
       create: {

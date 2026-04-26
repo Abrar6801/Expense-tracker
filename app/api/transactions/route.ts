@@ -24,19 +24,15 @@ function buildDateFilter(dateRange?: TransactionFilters['dateRange']): Date | un
 export async function GET(request: Request) {
   try {
     const supabase = createClient()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(request.url)
     const accountId = searchParams.get('accountId') ?? undefined
     const type = searchParams.get('type') as TransactionType | null
     const category = searchParams.get('category') ?? undefined
     const dateRange = (searchParams.get('dateRange') ?? 'all') as TransactionFilters['dateRange']
+    const search = searchParams.get('search') ?? undefined
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'))
     const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('pageSize') ?? '20')))
 
@@ -48,14 +44,18 @@ export async function GET(request: Request) {
       ...(type && { type }),
       ...(category && { category }),
       ...(dateFrom && { date: { gte: dateFrom } }),
+      ...(search && {
+        OR: [
+          { description: { contains: search, mode: 'insensitive' as const } },
+          { category: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }),
     }
 
     const [transactions, total] = await prisma.$transaction([
       prisma.transaction.findMany({
         where,
-        include: {
-          account: { select: { id: true, name: true, color: true, currency: true } },
-        },
+        include: { account: { select: { id: true, name: true, color: true, currency: true } } },
         orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -78,29 +78,18 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = createClient()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
     const data = createTransactionSchema.parse(body)
 
-    // Verify account belongs to this user
     const account = await prisma.account.findFirst({
       where: { id: data.accountId, userId: session.user.id },
     })
+    if (!account) return NextResponse.json({ error: 'Account not found' }, { status: 404 })
 
-    if (!account) {
-      return NextResponse.json({ error: 'Account not found' }, { status: 404 })
-    }
-
-    // Atomic: create transaction + update balance in one DB transaction
-    const balanceDelta =
-      data.type === TransactionType.INCOME ? data.amount : -data.amount
+    const balanceDelta = data.type === TransactionType.INCOME ? data.amount : -data.amount
 
     const [transaction] = await prisma.$transaction([
       prisma.transaction.create({
@@ -113,9 +102,7 @@ export async function POST(request: Request) {
           description: data.description ?? null,
           date: data.date,
         },
-        include: {
-          account: { select: { id: true, name: true, color: true, currency: true } },
-        },
+        include: { account: { select: { id: true, name: true, color: true, currency: true } } },
       }),
       prisma.account.update({
         where: { id: data.accountId },
@@ -126,10 +113,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ transaction: serializeTransaction(transaction) }, { status: 201 })
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
     }
     console.error('[POST /api/transactions]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

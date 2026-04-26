@@ -3,9 +3,9 @@
 import { useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 
-const PAGES = ['/dashboard', '/accounts', '/transactions', '/planner']
-const SWIPE_THRESHOLD = 60   // min horizontal px to trigger
-const VERTICAL_LIMIT = 80    // max vertical px before it's considered a scroll
+const PAGES = ['/dashboard', '/accounts', '/transactions', '/planner', '/goals', '/envelopes', '/splits']
+const SWIPE_THRESHOLD = 60
+const VERTICAL_LIMIT = 80
 
 export function SwipeNavigator() {
   const router = useRouter()
@@ -14,7 +14,7 @@ export function SwipeNavigator() {
 
   useEffect(() => {
     function onTouchStart(e: TouchEvent) {
-      if (window.innerWidth >= 768) return // sidebar is visible, no swipe needed
+      if (window.innerWidth >= 768) return
       const t = e.touches[0]
       touchStart.current = { x: t.clientX, y: t.clientY }
     }

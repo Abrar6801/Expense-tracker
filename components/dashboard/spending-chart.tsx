@@ -1,7 +1,7 @@
 'use client'
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, TrendingUp, TrendingDown } from 'lucide-react'
 import { useDashboardStats } from '@/hooks/use-dashboard'
 import { CHART_COLORS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
@@ -34,7 +34,7 @@ export function SpendingChart() {
     <div className="glass-card rounded-2xl overflow-hidden">
       <div className="px-4 sm:px-5 py-4 border-b border-white/[0.06]">
         <h3 className="text-sm font-semibold text-white">Spending by Category</h3>
-        <p className="text-xs text-white/35 mt-0.5">This month</p>
+        <p className="text-xs text-white/35 mt-0.5">This month · vs last month</p>
       </div>
 
       <div className="px-4 sm:px-5 py-4">
@@ -63,7 +63,7 @@ export function SpendingChart() {
 
         {!isLoading && chartData.length > 0 && (
           <>
-            <ResponsiveContainer width="100%" height={170}>
+            <ResponsiveContainer width="100%" height={160}>
               <PieChart>
                 <Pie
                   data={chartData}
@@ -88,9 +88,9 @@ export function SpendingChart() {
               </PieChart>
             </ResponsiveContainer>
 
-            <div className="mt-2 space-y-2">
+            <div className="mt-2 space-y-2.5">
               {chartData.slice(0, 6).map((item, index) => (
-                <div key={item.category} className="flex items-center justify-between">
+                <div key={item.category} className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className="h-2 w-2 shrink-0 rounded-full"
@@ -99,6 +99,14 @@ export function SpendingChart() {
                     <span className="text-white/50 truncate text-xs">{item.category}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
+                    {item.change != null && (
+                      <span className={`flex items-center gap-0.5 text-[9px] font-medium ${item.change > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        {item.change > 0
+                          ? <TrendingUp className="h-2.5 w-2.5" />
+                          : <TrendingDown className="h-2.5 w-2.5" />}
+                        {Math.abs(item.change)}%
+                      </span>
+                    )}
                     <span className="text-[10px] text-white/30 tabular-nums">
                       {item.percentage.toFixed(0)}%
                     </span>

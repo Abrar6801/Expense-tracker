@@ -43,10 +43,18 @@ export async function middleware(request: NextRequest) {
     pathname === '/' ||
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/accounts') ||
-    pathname.startsWith('/transactions')
+    pathname.startsWith('/transactions') ||
+    pathname.startsWith('/planner') ||
+    pathname.startsWith('/goals') ||
+    pathname.startsWith('/envelopes') ||
+    pathname.startsWith('/splits') ||
+    pathname.startsWith('/api/')
 
-  // Unauthenticated → send to login
+  // Unauthenticated → API routes get 401, pages get redirected to login
   if (!session && isProtectedRoute) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const loginUrl = new URL('/auth/login', request.url)
     loginUrl.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(loginUrl)

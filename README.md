@@ -1,144 +1,156 @@
-# Expense Tracker
+# Aurora Finance
 
-A full-stack expense tracking web application built with Next.js 14, Supabase, and Prisma. Track income, expenses, and net worth across multiple accounts with a clean dark-themed UI.
-
-## Features
-
-- **Multi-account support** — bank accounts and credit cards with color coding
-- **Transaction tracking** — income & expenses with categories, dates, and notes
-- **Atomic balance updates** — every transaction mutation is wrapped in a Prisma transaction
-- **Custom categories** — preset categories + add your own
-- **Dashboard** — net worth, monthly summary, spending donut chart, recent transactions
-- **Filtering** — filter transactions by account, type, category, and date range
-- **Auth** — Supabase email/password authentication with httpOnly cookies
-- **Mobile-first** — fully responsive with bottom tab navigation on mobile
-
-## Tech Stack
-
-| Layer | Tech |
-|-------|------|
-| Framework | Next.js 14 (App Router) |
-| Database | PostgreSQL via Supabase |
-| Auth | Supabase Auth |
-| ORM | Prisma |
-| Styling | Tailwind CSS v3 + shadcn/ui |
-| Charts | Recharts |
-| Forms | React Hook Form + Zod |
-| Server state | TanStack Query v5 |
-| UI state | Zustand |
+A full-stack personal finance tracker built with Next.js 14, Supabase, and Prisma. Manage accounts, track transactions, set savings goals, split expenses with friends, and get AI-powered financial insights — all in a glassmorphism UI that works seamlessly on desktop, tablet, and mobile.
 
 ---
 
-## Setup
+## Features
 
-### 1. Create a Supabase project
+### Dashboard
+- Net worth across all accounts (multi-currency with live USD conversion)
+- Monthly income, expenses, and net — with month-over-month percentage change
+- Pending from friends (split reimbursements shown separately, excluded from net worth)
+- Spending by category with % change vs last month
+- 6-month income vs expense trend chart
+- Recent transactions feed
+- Account balances summary
 
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Wait for it to provision (~2 minutes)
+### Accounts
+- Bank, credit card, and cash account types
+- Multi-currency support with automatic FX-to-USD conversion for net worth
+- Color labels and last-four digits for cards
 
-### 2. Clone and install dependencies
+### Transactions
+- Full create / edit / delete with atomic account balance updates
+- Pagination, keyword search, and filters by type, category, account, and date range
+- CSV export with formula injection protection
+- Transfer between accounts (paired transaction records)
+
+### Budget Limits
+- Monthly spending caps per category
+- Real-time progress bars with over-budget warnings
+
+### Planner
+- Log planned expenses and expected income sources
+- Project your month-end balance before spending happens
+- Track money owed to you with expected income types
+
+### Recurring Templates
+- Schedule transactions at weekly, biweekly, monthly, or yearly intervals
+- One-click "post now" to create the transaction when due
+
+### Savings Goals
+- Link goals to specific accounts to track progress from the account balance
+- Set target amounts and optional deadlines with a visual progress bar
+
+### Cash Envelopes
+- Digital envelope budgeting — allocate a fixed amount from an account
+- Track spending per envelope; see remaining balance at a glance
+
+### Splits
+- **Groups** — Save named groups of friends (flat mates, uni friends, etc.) to reuse across splits
+- **New split** — Select a saved group to pre-fill all members instantly, or add members manually
+- **Split all equally** — One click divides the total amount evenly across all members
+- **Mark as received** — When a friend pays back, pick which account to credit; a Reimbursement transaction is created and the balance updates atomically
+- Pending amounts shown on the dashboard as "Pending from friends" — never mixed into income or net worth
+
+### AI Financial Assistant
+- Powered by Groq (`llama-3.3-70b-versatile`) with an agentic tool-call loop
+- Ask natural-language questions: *"How much did I spend on dining this month?"*, *"Add a $50 grocery expense to my checking account"*, *"Transfer $200 from savings to cash"*
+- Calls live database tools — no hallucinated numbers, always accurate to your real data
+- Pre-computed date context (today, this week, last month, YTD) so date queries always resolve correctly
+- Rate limited to 20 requests per minute per user
+
+### PWA
+- Installable on Android and desktop via "Add to Home Screen"
+- Offline-capable shell with app manifest and icons
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Database | PostgreSQL via Supabase |
+| ORM | Prisma |
+| Auth | Supabase Auth (SSR) |
+| Server state | TanStack Query v5 |
+| Client state | Zustand |
+| Validation | Zod |
+| UI components | Tailwind CSS + Radix UI |
+| Charts | Recharts |
+| AI | Groq API |
+| PWA | next-pwa |
+| Testing | Jest + ts-jest |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- A [Supabase](https://supabase.com) project (free tier works)
+- A [Groq](https://console.groq.com) API key (free tier)
+
+### 1. Clone and install
 
 ```bash
-git clone <repo>
-cd expense-tracker
+git clone https://github.com/Abrar6801/Expense-tracker.git
+cd Expense-tracker
 npm install
 ```
 
-### 3. Configure environment variables
+### 2. Environment variables
+
+Create a `.env` file in the project root:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Prisma — use PgBouncer URL for runtime, direct URL for migrations
+DATABASE_URL=postgresql://postgres:password@db.your-project.supabase.co:5432/postgres?pgbouncer=true
+DIRECT_URL=postgresql://postgres:password@db.your-project.supabase.co:5432/postgres
+
+# Groq AI
+GROQ_API_KEY=your-groq-api-key
+GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+### 3. Push the database schema
 
 ```bash
-cp .env.local.example .env.local
+npx prisma db push
 ```
 
-Fill in `.env.local` with your Supabase credentials:
-
-| Variable | Where to find it |
-|----------|-----------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → Settings → API → Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → anon public key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Settings → API → service_role key |
-| `DATABASE_URL` | Supabase Dashboard → Settings → Database → Connection Pooling (Transaction mode) |
-| `DIRECT_URL` | Supabase Dashboard → Settings → Database → Connection String → URI |
-
-**Important**: Add `?pgbouncer=true&connection_limit=1` to `DATABASE_URL` for serverless environments.
-
-### 4. Set up the database
-
-```bash
-# Generate Prisma client
-npm run db:generate
-
-# Run migrations (creates tables)
-npm run db:migrate
-
-# Seed with demo data
-npm run db:seed
-```
-
-### 5. Configure Supabase Row-Level Security (recommended)
-
-In the Supabase SQL editor, run:
-
-```sql
--- Enable RLS on all tables
-ALTER TABLE "Account" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Transaction" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "UserPreferences" ENABLE ROW LEVEL SECURITY;
-
--- Account policies
-CREATE POLICY "Users can view own accounts"
-  ON "Account" FOR SELECT
-  USING (auth.uid()::text = "userId");
-
-CREATE POLICY "Users can insert own accounts"
-  ON "Account" FOR INSERT
-  WITH CHECK (auth.uid()::text = "userId");
-
-CREATE POLICY "Users can update own accounts"
-  ON "Account" FOR UPDATE
-  USING (auth.uid()::text = "userId");
-
-CREATE POLICY "Users can delete own accounts"
-  ON "Account" FOR DELETE
-  USING (auth.uid()::text = "userId");
-
--- Transaction policies (same pattern)
-CREATE POLICY "Users can view own transactions"
-  ON "Transaction" FOR SELECT
-  USING (auth.uid()::text = "userId");
-
-CREATE POLICY "Users can insert own transactions"
-  ON "Transaction" FOR INSERT
-  WITH CHECK (auth.uid()::text = "userId");
-
-CREATE POLICY "Users can update own transactions"
-  ON "Transaction" FOR UPDATE
-  USING (auth.uid()::text = "userId");
-
-CREATE POLICY "Users can delete own transactions"
-  ON "Transaction" FOR DELETE
-  USING (auth.uid()::text = "userId");
-
--- UserPreferences policies
-CREATE POLICY "Users can manage own preferences"
-  ON "UserPreferences" FOR ALL
-  USING (auth.uid()::text = "userId")
-  WITH CHECK (auth.uid()::text = "userId");
-```
-
-### 6. Start the dev server
+### 4. Start the dev server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Visit [http://localhost:3000](http://localhost:3000) and create an account.
 
-### Demo account
+---
 
-After seeding, you can log in with:
-- **Email**: `demo@example.com`
-- **Password**: `demo1234`
+## Scripts
+
+```bash
+npm run dev            # Start development server
+npm run build          # Production build (runs prisma generate first)
+npm run start          # Start production server
+npm run test           # Run Jest test suite
+npm run test:watch     # Run tests in watch mode
+npm run test:coverage  # Run tests with coverage report
+npm run lint           # ESLint
+npm run db:migrate     # Run Prisma migrations (requires direct DB connection)
+npm run db:studio      # Open Prisma Studio GUI
+npm run db:generate    # Regenerate Prisma client after schema changes
+```
 
 ---
 
@@ -146,53 +158,108 @@ After seeding, you can log in with:
 
 ```
 ├── app/
-│   ├── (protected)/          # Auth-gated routes
+│   ├── (protected)/          # Auth-gated pages
 │   │   ├── dashboard/
 │   │   ├── accounts/
-│   │   └── transactions/
-│   ├── api/                  # API route handlers
+│   │   ├── transactions/
+│   │   ├── planner/
+│   │   ├── goals/
+│   │   ├── envelopes/
+│   │   └── splits/
+│   ├── api/                  # REST API routes
 │   │   ├── accounts/
 │   │   ├── transactions/
-│   │   ├── categories/
-│   │   └── dashboard/
-│   └── auth/
-│       ├── login/
-│       └── register/
-├── components/
-│   ├── accounts/
-│   ├── dashboard/
-│   ├── layout/
-│   ├── transactions/
-│   └── ui/                   # shadcn/ui components
-├── hooks/                    # React Query hooks
-├── lib/                      # Prisma, Supabase, utils
-├── prisma/                   # Schema + seed
-├── store/                    # Zustand UI store
-└── types/                    # TypeScript types
+│   │   │   └── export/       # CSV export
+│   │   ├── budgets/
+│   │   ├── goals/
+│   │   ├── envelopes/
+│   │   ├── splits/
+│   │   │   └── [id]/members/[memberId]/   # Mark received
+│   │   ├── split-groups/
+│   │   ├── planned-expenses/
+│   │   ├── recurring/
+│   │   ├── transfers/
+│   │   ├── dashboard/
+│   │   │   └── trends/
+│   │   └── chat/
+│   └── auth/                 # Login / register / OAuth callback
+├── components/               # Feature and shared UI components
+├── hooks/                    # TanStack Query data hooks (one per feature)
+├── lib/                      # prisma.ts, supabase clients, utils, validations, constants
+├── prisma/                   # schema.prisma + migrations
+├── store/                    # Zustand UI stores
+├── types/                    # Shared TypeScript types and serializer functions
+└── __tests__/
+    ├── api/                  # API route integration tests
+    ├── lib/                  # Unit tests for utils, validations, constants
+    └── security/             # Security-focused tests
 ```
 
-## Key architectural decisions
+---
 
-### Atomic balance updates
-Every transaction create/update/delete uses `prisma.$transaction()` to update both the transaction record and the account balance in a single atomic operation. Partial updates are impossible.
-
-### Security layers
-1. **Middleware** — redirects unauthenticated requests before they hit routes
-2. **API route auth** — every API handler verifies the session via Supabase
-3. **Explicit userId filters** — all Prisma queries include `where: { userId }` 
-4. **RLS** — database-level policy as the final backstop
-
-### Type safety
-Prisma `Decimal` types are serialized to strings for JSON transport. The `SerializedAccount` and `SerializedTransaction` types in `types/index.ts` reflect this — parse with `parseFloat()` when doing arithmetic on the client.
-
-## Available scripts
+## Testing
 
 ```bash
-npm run dev          # Start dev server
-npm run build        # Production build
-npm run lint         # ESLint
-npm run db:migrate   # Run Prisma migrations
-npm run db:seed      # Seed demo data
-npm run db:studio    # Open Prisma Studio
-npm run db:generate  # Regenerate Prisma client
+npm test
 ```
+
+```
+Test Suites: 13 passed, 13 total
+Tests:       210 passed, 210 total
+```
+
+| Suite | Coverage |
+|---|---|
+| `api/accounts` | CRUD, auth guard, IDOR protection |
+| `api/transactions` | Pagination, search, atomic balance update |
+| `api/budgets` | Month/year bounds, per-user scoping |
+| `api/goals` | Validation, userId scoping, color regex |
+| `api/envelopes` | Envelope creation, atomic spending transactions |
+| `api/chat-security` | Rate limiting, input validation, auth enforcement |
+| `security/csv-injection` | Formula prefix neutralization (`=`, `+`, `-`, `@`, tab, CR) |
+| `security/open-redirect` | Protocol-relative and colon-bypass prevention |
+| `security/rate-limit` | Per-user sliding window, reset behaviour |
+| `security/input-validation` | Query parameter sanitization and bounds |
+| `lib/validations` | All Zod schemas — valid and invalid inputs |
+| `lib/utils` | formatCurrency, formatDate, getInitials, cn |
+| `lib/constants` | PRESET_CATEGORIES, FX_TO_USD exchange rates |
+
+---
+
+## Security
+
+| Control | Implementation |
+|---|---|
+| Authentication | Supabase session checked on every API route and protected page |
+| IDOR prevention | All queries filter by `session.user.id` — users can never access each other's data |
+| Input validation | Zod schemas on every POST/PATCH body; invalid input returns 400 |
+| CSV injection | Export sanitises values starting with `=`, `+`, `-`, `@`, `\t`, `\r` |
+| Open redirect | Auth redirects only accept relative paths; rejects `//`, `https://`, and `:` bypasses |
+| Rate limiting | AI chat endpoint: 20 req/min per user (in-memory sliding window) |
+| Security headers | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, `Referrer-Policy`, `Permissions-Policy` |
+| userId trust | All writes use `session.user.id` — a body-supplied `userId` is always ignored |
+
+---
+
+## Database Schema (overview)
+
+```
+Account ──< Transaction
+Account ──< CashEnvelope ──< Transaction (envelope spending)
+Account ──< PlannedExpense
+Account ──< RecurringTemplate
+Account ──< SavingsGoal
+
+SplitGroup ──< SplitGroupMember
+SplitGroup ──< Split ──< SplitMember
+
+TransactionType: EXPENSE | INCOME | TRANSFER | REIMBURSEMENT
+```
+
+`REIMBURSEMENT` transactions are created when a split member marks a payment as received. They are excluded from all income aggregations and net worth calculations — surfaced only as the "Pending from friends" dashboard metric.
+
+---
+
+## License
+
+MIT

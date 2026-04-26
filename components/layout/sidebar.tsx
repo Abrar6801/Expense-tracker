@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Sparkles, LayoutDashboard, CreditCard, ArrowLeftRight, CalendarClock } from 'lucide-react'
+import { Sparkles, LayoutDashboard, CreditCard, ArrowLeftRight, CalendarClock, Target, Wallet, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { UserMenu } from '@/components/layout/user-menu'
 
@@ -11,6 +11,9 @@ const NAV_ITEMS = [
   { href: '/accounts', label: 'Accounts', icon: CreditCard },
   { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
   { href: '/planner', label: 'Planner', icon: CalendarClock },
+  { href: '/goals', label: 'Goals', icon: Target },
+  { href: '/envelopes', label: 'Envelopes', icon: Wallet },
+  { href: '/splits', label: 'Splits', icon: Users },
 ]
 
 interface SidebarProps {
@@ -35,7 +38,7 @@ export function Sidebar({ email }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 lg:px-3 space-y-0.5">
+      <nav className="flex-1 px-2 lg:px-3 space-y-0.5 overflow-y-auto">
         <p className="hidden lg:block px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-white/25">Menu</p>
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(`${href}/`)
@@ -68,7 +71,7 @@ export function Sidebar({ email }: SidebarProps) {
         })}
       </nav>
 
-      {/* User menu — compact icon at md, full at lg */}
+      {/* User menu */}
       <div className="border-t border-white/[0.06]">
         <div className="md:flex lg:hidden justify-center p-3">
           <UserMenu email={email} compact />
