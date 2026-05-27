@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, ArrowLeftRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, ArrowLeftRight, ChevronLeft, ChevronRight, ListPlus } from 'lucide-react'
 import { useTransactions } from '@/hooks/use-transactions'
 import { useUIStore } from '@/store/ui-store'
 import { TransactionItem } from '@/components/transactions/transaction-item'
 import { TransactionFiltersBar } from '@/components/transactions/transaction-filters'
 import { TransactionForm } from '@/components/transactions/transaction-form'
+import { BulkTransactionForm } from '@/components/transactions/bulk-transaction-form'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
@@ -15,7 +16,10 @@ import type { TransactionFilters } from '@/types'
 const DEFAULT_PAGE_SIZE = 20
 
 export function TransactionList() {
-  const { isAddTransactionOpen, openAddTransaction, closeAddTransaction } = useUIStore()
+  const {
+    isAddTransactionOpen, openAddTransaction, closeAddTransaction,
+    isAddBulkTransactionOpen, openAddBulkTransaction, closeAddBulkTransaction,
+  } = useUIStore()
   const [filters, setFilters] = useState<TransactionFilters>({
     dateRange: 'all',
     page: 1,
@@ -68,13 +72,23 @@ export function TransactionList() {
                 ? 'Try adjusting your filters.'
                 : 'Start tracking your income and expenses.'}
             </p>
-            <Button
-              onClick={() => openAddTransaction()}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 border-0"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add transaction
-            </Button>
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                onClick={() => openAddTransaction()}
+                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 border-0"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add transaction
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => openAddBulkTransaction()}
+                className="border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.05]"
+              >
+                <ListPlus className="mr-2 h-4 w-4" />
+                Add multiple
+              </Button>
+            </div>
           </div>
         )}
 
@@ -125,6 +139,10 @@ export function TransactionList() {
 
       <Dialog open={isAddTransactionOpen} onOpenChange={closeAddTransaction}>
         <TransactionForm />
+      </Dialog>
+
+      <Dialog open={isAddBulkTransactionOpen} onOpenChange={closeAddBulkTransaction}>
+        {isAddBulkTransactionOpen && <BulkTransactionForm />}
       </Dialog>
     </div>
   )

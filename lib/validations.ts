@@ -140,6 +140,15 @@ export const registerSchema = z
     path: ['confirmPassword'],
   })
 
+// ─── Bulk transaction ─────────────────────────────────────────────────────────
+
+export const bulkCreateTransactionSchema = z.object({
+  transactions: z
+    .array(createTransactionSchema)
+    .min(1, 'Add at least one transaction')
+    .max(20, 'Maximum 20 transactions at once'),
+})
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>
@@ -159,3 +168,4 @@ export type CreateSplitMemberInput = z.infer<typeof createSplitMemberSchema>
 export type MarkReceivedInput = z.infer<typeof markReceivedSchema>
 export type CreateSplitGroupInput = z.infer<typeof createSplitGroupSchema>
 export type AddGroupMemberInput = z.infer<typeof addGroupMemberSchema>
+export type BulkCreateTransactionInput = z.infer<typeof bulkCreateTransactionSchema>

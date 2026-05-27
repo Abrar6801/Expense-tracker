@@ -11,6 +11,9 @@ interface UIStore {
   editingTransaction: SerializedTransaction | null
   defaultAccountId: string | null
 
+  // Bulk transaction dialog
+  isAddBulkTransactionOpen: boolean
+
   // Actions
   openAddAccount: () => void
   closeAddAccount: () => void
@@ -21,6 +24,9 @@ interface UIStore {
   closeAddTransaction: () => void
   openEditTransaction: (transaction: SerializedTransaction) => void
   closeEditTransaction: () => void
+
+  openAddBulkTransaction: () => void
+  closeAddBulkTransaction: () => void
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -29,6 +35,7 @@ export const useUIStore = create<UIStore>((set) => ({
   isAddTransactionOpen: false,
   editingTransaction: null,
   defaultAccountId: null,
+  isAddBulkTransactionOpen: false,
 
   openAddAccount: () => set({ isAddAccountOpen: true, editingAccount: null }),
   closeAddAccount: () => set({ isAddAccountOpen: false }),
@@ -41,4 +48,7 @@ export const useUIStore = create<UIStore>((set) => ({
   openEditTransaction: (transaction) =>
     set({ editingTransaction: transaction, isAddTransactionOpen: true }),
   closeEditTransaction: () => set({ editingTransaction: null, isAddTransactionOpen: false }),
+
+  openAddBulkTransaction: () => set({ isAddBulkTransactionOpen: true }),
+  closeAddBulkTransaction: () => set({ isAddBulkTransactionOpen: false }),
 }))

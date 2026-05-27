@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { SerializedTransaction, TransactionFilters } from '@/types'
-import type { CreateTransactionInput, UpdateTransactionInput } from '@/lib/validations'
+import type { CreateTransactionInput, UpdateTransactionInput, BulkCreateTransactionInput } from '@/lib/validations'
 
 const transactionKeys = {
   all: ['transactions'] as const,
@@ -69,6 +69,21 @@ async function createTransfer(input: {
   return (await res.json()).transaction
 }
 
+async function bulkCreateTransactions(
+  input: BulkCreateTransactionInput
+): Promise<{ transactions: SerializedTransaction[]; count: number }> {
+  const res = await fetch('/api/transactions/bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error(err.error ?? 'Failed to create transactions')
+  }
+  return res.json()
+}
+
 async function deleteTransaction(id: string): Promise<void> {
   const res = await fetch(`/api/transactions/${id}`, { method: 'DELETE' })
   if (!res.ok) {
@@ -121,6 +136,20 @@ export function useCreateTransfer() {
       queryClient.invalidateQueries({ queryKey: ['accounts'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       toast.success('Transfer completed')
+    },
+    onError: (error: Error) => toast.error(error.message),
+  })
+}
+
+export function useBulkCreateTransactions() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: bulkCreateTransactions,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: transactionKeys.all })
+      queryClient.invalidateQueries({ queryKey: ['accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      toast.success(`${data.count} transaction${data.count === 1 ? '' : 's'} added`)
     },
     onError: (error: Error) => toast.error(error.message),
   })
