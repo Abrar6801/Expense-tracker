@@ -146,7 +146,7 @@ export const bulkCreateTransactionSchema = z.object({
   transactions: z
     .array(createTransactionSchema)
     .min(1, 'Add at least one transaction')
-    .max(20, 'Maximum 20 transactions at once'),
+    .max(100, 'Maximum 100 transactions at once'),
 })
 
 // ─── Inferred types ───────────────────────────────────────────────────────────

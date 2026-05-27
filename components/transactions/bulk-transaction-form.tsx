@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   DialogContent,
   DialogDescription,
@@ -130,12 +129,12 @@ export function BulkTransactionForm() {
   }
 
   function addRow() {
-    if (rows.length >= 20) return
+    if (rows.length >= 100) return
     setRows((prev) => [...prev, createRow()])
   }
 
   function duplicateRow(row: TransactionRow) {
-    if (rows.length >= 20) return
+    if (rows.length >= 100) return
     const newRow: TransactionRow = { ...row, id: `row-${++rowCounter}`, amount: '' }
     setRows((prev) => {
       const idx = prev.findIndex((r) => r.id === row.id)
@@ -230,13 +229,13 @@ export function BulkTransactionForm() {
   }
 
   return (
-    <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0">
+    <DialogContent className="sm:max-w-2xl h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
       <DialogHeader className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
         <DialogTitle>Add multiple transactions</DialogTitle>
-        <DialogDescription>Add up to 20 transactions at once.</DialogDescription>
+        <DialogDescription>Add up to 100 transactions at once.</DialogDescription>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
         {/* Account mode selector */}
         <div className="px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
           <p className="text-xs font-medium text-white/40 uppercase tracking-wide mb-2">Account</p>
@@ -291,7 +290,7 @@ export function BulkTransactionForm() {
         </div>
 
         {/* Transaction rows */}
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0">
           <div className="space-y-3 p-5">
             {rows.map((row, idx) => {
               const rowErr = errors.rows[idx]
@@ -309,7 +308,7 @@ export function BulkTransactionForm() {
                       <button
                         type="button"
                         onClick={() => duplicateRow(row)}
-                        disabled={rows.length >= 20 || isPending}
+                        disabled={rows.length >= 100 || isPending}
                         title="Duplicate row"
                         className="text-white/20 hover:text-white/50 transition-colors disabled:opacity-30 p-1 rounded"
                       >
@@ -486,7 +485,7 @@ export function BulkTransactionForm() {
               )
             })}
 
-            {rows.length < 20 && (
+            {rows.length < 100 && (
               <button
                 type="button"
                 onClick={addRow}
@@ -495,11 +494,11 @@ export function BulkTransactionForm() {
               >
                 <Plus className="h-4 w-4" />
                 Add another transaction
-                <span className="text-white/20">({rows.length}/20)</span>
+                <span className="text-white/20">({rows.length}/100)</span>
               </button>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="px-5 py-4 border-t border-white/[0.06]">
           <Button
